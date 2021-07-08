@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"mmm_server/pkg/middleware"
 	"mmm_server/pkg/routes"
+	"mmm_server/platform/database"
 )
 
 func Execute() {
@@ -15,9 +16,16 @@ func Execute() {
 	routes.DeezerRoutes(app)
 	routes.NotFoundRoute(app)
 
-	err := app.Listen(":4000")
+	_, err := database.MongoDbConnection()
+	if err != nil {
+		return
+	}
+
+	err = app.Listen(":4000")
 	if err != nil {
 		fmt.Printf("ERROR: %s \n", err)
 		return
 	}
 }
+
+// DNWCIEGKv32vUryK
