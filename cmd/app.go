@@ -3,14 +3,14 @@ package cmd
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"mmm_server/pkg/middleware"
 	"mmm_server/pkg/routes"
 )
 
 func Execute() {
 	app := fiber.New()
 
-	app.Use(cors.New())
+	middleware.FiberMiddleware(app)
 
 	routes.DeezerRoutes(app)
 	routes.NotFoundRoute(app)
