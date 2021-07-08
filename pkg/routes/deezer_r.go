@@ -2,7 +2,7 @@ package routes
 
 import "github.com/gofiber/fiber/v2"
 
-func DeezerRoutes(app *fiber.App) {
+func DeezerRoute(app *fiber.App) {
 	api := app.Group("/v1")
 
 	api.Get("/deezer", func(ctx *fiber.Ctx) error {

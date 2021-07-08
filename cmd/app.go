@@ -13,7 +13,8 @@ func Execute() {
 
 	middleware.FiberMiddleware(app)
 
-	routes.DeezerRoutes(app)
+	routes.UsersRoute(app)
+	routes.DeezerRoute(app)
 	routes.NotFoundRoute(app)
 
 	_, err := database.MongoDbConnection()
