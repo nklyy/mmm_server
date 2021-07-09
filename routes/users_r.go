@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"mmm_server/controllers"
+
 	"github.com/gofiber/fiber/v2"
-	"mmm_server/app/controllers"
 )
 
 func UsersRoute(app *fiber.App) {

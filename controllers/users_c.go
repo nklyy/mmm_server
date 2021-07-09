@@ -3,12 +3,13 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"log"
+	"mmm_server/databases"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"log"
-	"mmm_server/platform/database"
-	"time"
 )
 
 type User struct {
@@ -20,7 +21,7 @@ type User struct {
 }
 
 func GetAllUsers(ctx *fiber.Ctx) error {
-	db, err := database.MongoDbConnection()
+	db, err := databases.MongoDbConnection()
 
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{

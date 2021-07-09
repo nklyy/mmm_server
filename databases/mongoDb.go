@@ -1,13 +1,18 @@
-package database
+package databases
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"log"
-	"time"
 )
+
+// type Databases struct {
+// 	UsersCollection *mongo.Collection
+// }
 
 func MongoDbConnection() (*mongo.Collection, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://admin:DNWCIEGKv32vUryK@cluster0.ppcb3.mongodb.net/MMM?retryWrites=true&w=majority"))

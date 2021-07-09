@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"mmm_server/databases"
+	"mmm_server/middleware"
+	"mmm_server/routes"
+
 	"github.com/gofiber/fiber/v2"
-	"mmm_server/pkg/middleware"
-	"mmm_server/pkg/routes"
-	"mmm_server/platform/database"
 )
 
 func Execute() {
@@ -17,7 +18,7 @@ func Execute() {
 	routes.DeezerRoute(app)
 	routes.NotFoundRoute(app)
 
-	_, err := database.MongoDbConnection()
+	_, err := databases.MongoDbConnection()
 	if err != nil {
 		return
 	}
