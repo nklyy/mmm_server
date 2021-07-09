@@ -1,13 +1,13 @@
-package repositories
+package repository
 
 import (
-	"mmm_server/repositories/models"
+	"mmm_server/pkg/model"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type User interface {
-	GetAllUsers() []models.User
+	GetAllUsers() ([]model.User, error)
 }
 
 type Repository struct {

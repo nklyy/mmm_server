@@ -2,30 +2,40 @@ package cmd
 
 import (
 	"fmt"
-	"mmm_server/controllers"
-	"mmm_server/databases"
-	"mmm_server/middleware"
-	"mmm_server/repositories"
-	"mmm_server/routes"
-
 	"github.com/gofiber/fiber/v2"
+	"mmm_server/pkg/handler"
+	middleware2 "mmm_server/pkg/middleware"
+	"mmm_server/pkg/repository"
+	"mmm_server/pkg/service"
 )
 
 func Execute() {
 	app := fiber.New()
 
-	db, err := databases.MongoDbConnection()
+	db, err := repository.MongoDbConnection()
 	if err != nil {
 		return
 	}
 
-	middleware.FiberMiddleware(app)
+	middleware2.FiberMiddleware(app)
 
-	repos := repositories.NewRepository(db)
-	controll := controllers.NewController(repos)
-	route := routes.NewRoute(controll)
+	newRepository := repository.NewRepository(db)
+	newService := service.NewService(newRepository)
+	newHandler := handler.NewHandler(newService)
 
-	route.Initialroute(app)
+	newHandler.InitialRoute(app)
+
+	// NotFound Urls
+	app.Use(
+		// Anonymous function.
+		func(c *fiber.Ctx) error {
+			// Return HTTP 404 status and JSON response.
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Sorry, endpoint " + "'" + c.OriginalURL() + "'" + " is not found",
+			})
+		},
+	)
 
 	err = app.Listen(":4000")
 	if err != nil {
