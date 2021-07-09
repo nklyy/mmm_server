@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"mmm_server/pkg/handler"
-	"mmm_server/pkg/middleware"
 	"mmm_server/pkg/repository"
 	"mmm_server/pkg/service"
 )
@@ -12,13 +12,19 @@ import (
 func Execute() {
 	app := fiber.New()
 
+	// Connection to DB
 	db, err := repository.MongoDbConnection()
 	if err != nil {
 		return
 	}
 
-	middleware.FiberMiddleware(app)
+	// Init App Middleware
+	app.Use(
+		// Add CORS to each route.
+		cors.New(),
+	)
 
+	// Init repository, service and handlers
 	newRepository := repository.NewRepository(db)
 	newService := service.NewService(newRepository)
 	newHandler := handler.NewHandler(newService)
@@ -37,11 +43,10 @@ func Execute() {
 		},
 	)
 
+	// Starting App
 	err = app.Listen(":4000")
 	if err != nil {
 		fmt.Printf("ERROR: %s \n", err)
 		return
 	}
 }
-
-// DNWCIEGKv32vUryK
