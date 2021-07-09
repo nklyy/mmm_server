@@ -1,9 +1,13 @@
 package repositories
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"mmm_server/repositories/models"
+
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type User interface {
-	GetAllUsers() []U
+	GetAllUsers() []models.User
 }
 
 type Repository struct {
