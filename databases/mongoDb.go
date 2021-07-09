@@ -10,10 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// type Databases struct {
-// 	UsersCollection *mongo.Collection
-// }
-
 func MongoDbConnection() (*mongo.Collection, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://admin:DNWCIEGKv32vUryK@cluster0.ppcb3.mongodb.net/MMM?retryWrites=true&w=majority"))
 	if err != nil {
