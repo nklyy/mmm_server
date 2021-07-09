@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"mmm_server/pkg/handler"
-	middleware2 "mmm_server/pkg/middleware"
+	"mmm_server/pkg/middleware"
 	"mmm_server/pkg/repository"
 	"mmm_server/pkg/service"
 )
@@ -17,7 +17,7 @@ func Execute() {
 		return
 	}
 
-	middleware2.FiberMiddleware(app)
+	middleware.FiberMiddleware(app)
 
 	newRepository := repository.NewRepository(db)
 	newService := service.NewService(newRepository)

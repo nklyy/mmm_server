@@ -8,7 +8,7 @@ func (h *Handler) allUsers(ctx *fiber.Ctx) error {
 	users, err := h.services.GetAllUsers()
 
 	if err != nil {
-		return err
+		return ctx.JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return ctx.JSON(users)

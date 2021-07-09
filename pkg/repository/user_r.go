@@ -17,7 +17,7 @@ func NewUserMongoDb(db *mongo.Collection) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
-func (ur *UserMongoDb) GetAllUsers() ([]model.User, error) {
+func (ur *UserMongoDb) GetAllUsers(sort string) ([]model.User, error) {
 	var users []model.User
 
 	cursor, err := ur.db.Find(context.TODO(), bson.M{})

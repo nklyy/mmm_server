@@ -7,7 +7,7 @@ import (
 )
 
 type User interface {
-	GetAllUsers() ([]model.User, error)
+	GetAllUsers(sort string) ([]model.User, error)
 }
 
 type Repository struct {
