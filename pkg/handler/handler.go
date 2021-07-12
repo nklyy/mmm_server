@@ -20,4 +20,13 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 	{
 		user.Get("/", h.allUsers)
 	}
+
+	v1 := route.Group("/v1")
+
+	{
+		v1.Get("/deezer", h.deezerAuthRedirect)
+		v1.Get("/deezer/callback", h.deezerCallback)
+		v1.Post("/deezer/checkT", h.checkAccessToken)
+		v1.Post("/deezer/userMusic", h.deezerUserMusic)
+	}
 }

@@ -10,17 +10,17 @@ import (
 )
 
 type UserMongoDb struct {
-	db *mongo.Collection
+	db *mongo.Database
 }
 
-func NewUserMongoDb(db *mongo.Collection) *UserMongoDb {
+func NewUserMongoDb(db *mongo.Database) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
 func (ur *UserMongoDb) GetAllUsers(sort string) ([]model.User, error) {
 	var users []model.User
 
-	cursor, err := ur.db.Find(context.TODO(), bson.M{})
+	cursor, err := ur.db.Collection("user").Find(context.TODO(), bson.M{})
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func MongoDbConnection() (*mongo.Collection, error) {
+func MongoDbConnection() (*mongo.Database, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://admin:DNWCIEGKv32vUryK@cluster0.ppcb3.mongodb.net/MMM?retryWrites=true&w=majority"))
 	if err != nil {
 		log.Fatal(err)
@@ -28,7 +28,7 @@ func MongoDbConnection() (*mongo.Collection, error) {
 		log.Fatal(err)
 	}
 
-	collection := client.Database("MMM").Collection("user")
+	collection := client.Database("MMM")
 
 	return collection, nil
 }

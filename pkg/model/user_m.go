@@ -10,6 +10,7 @@ type User struct {
 	ID        primitive.ObjectID `bson:"_id"`
 	CreatedAt time.Time          `bson:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at"`
-	Text      string             `bson:"text"`
-	Age       int                `bson:"age"`
+	Music     []string           `bson:"music"`
+	DeezerID  string             `bson:"deezer_id"`
+	SpotifyID string             `bson:"spotify_id"`
 }
