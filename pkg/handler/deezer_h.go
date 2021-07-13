@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,10 +13,10 @@ func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 
 	token := h.services.GetDeezerAccessToken(code)
 
-	return ctx.Redirect("http://localhost:3000/cf?code=" + token)
+	return ctx.Redirect("http://localhost:3000/cf?type=d&code=" + token)
 }
 
-func (h *Handler) checkAccessToken(ctx *fiber.Ctx) error {
+func (h *Handler) checkDeezerAccessToken(ctx *fiber.Ctx) error {
 	var cd struct {
 		Code string `json:"code"`
 	}
@@ -26,19 +25,25 @@ func (h *Handler) checkAccessToken(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	ok := h.services.CheckAccessToken(cd.Code)
+	ok := h.services.CheckDeezerAccessToken(cd.Code)
 	if !ok {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid token!")
+		//return fiber.NewError(fiber.StatusBadRequest, "Invalid token!")
+		return ctx.JSON(fiber.Map{"error": "Invalid token!"})
 	}
 
 	return ctx.JSON(fiber.Map{"message": "success"})
 }
 
 func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
-	token := ctx.Body()
-	fmt.Println(token)
+	var tkn struct {
+		Token string `json:"token"`
+	}
 
-	//h.services.GetDeezerUserMusic(token)
+	if err := ctx.BodyParser(&tkn); err != nil {
+		return err
+	}
 
-	return ctx.JSON("")
+	uMusic := h.services.GetDeezerUserMusic(tkn.Token)
+
+	return ctx.JSON(uMusic)
 }

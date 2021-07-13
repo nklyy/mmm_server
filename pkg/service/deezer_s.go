@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
 )
@@ -21,14 +20,38 @@ func NewDeezerService(repo repository.User) *DeezerService {
 	}
 }
 
+type DeezerUserInfo struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type DeezerAccessToken struct {
+	AccessToken string `json:"access_token"`
+	Expires     int    `json:"expires"`
+}
+
+type DeezerTrack struct {
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Artist struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"artist"`
+	Album struct {
+		ID    int    `json:"id"`
+		Title string `json:"title"`
+	} `json:"album"`
+	Type string `json:"type"`
+}
+
 func (ds *DeezerService) GetDeezerAccessToken(code string) string {
-	accessT := getAccessToken(code)
+	accessT := getDZAccessToken(code)
 
 	return accessT.AccessToken
 }
 
-func (ds *DeezerService) CheckAccessToken(token string) bool {
-	user := getUserInfo(token)
+func (ds *DeezerService) CheckDeezerAccessToken(token string) bool {
+	user := getDZUserInfo(token)
 
 	if user.Name != "" {
 		return true
@@ -37,17 +60,15 @@ func (ds *DeezerService) CheckAccessToken(token string) bool {
 	return false
 }
 
-func (ds *DeezerService) GetDeezerUserMusic(token string) []model.Track {
-	userInfo := getUserInfo(token)
-	userTracks := getUserTracks(token)
-
-	fmt.Println(userInfo)
+func (ds *DeezerService) GetDeezerUserMusic(token string) []DeezerTrack {
+	//userInfo := getUserInfo(token)
+	userTracks := getDZUserTracks(token)
 
 	return userTracks
 }
 
 // Get Access Token
-func getAccessToken(code string) model.AccessToken {
+func getDZAccessToken(code string) DeezerAccessToken {
 	postBody, _ := json.Marshal(map[string]string{
 		"code": code,
 	})
@@ -68,19 +89,19 @@ func getAccessToken(code string) model.AccessToken {
 	}
 
 	// Unmarshal access token
-	var result model.AccessToken
+	var result DeezerAccessToken
 	err = json.Unmarshal(body, &result)
 
 	return result
 }
 
 // Get Deezer User
-func getUserInfo(accessT string) *model.UserInfo {
-	url := "https://api.deezer.com/user/me?access_token=" + accessT
+func getDZUserInfo(accessT string) *DeezerUserInfo {
+	urlDZ := "https://api.deezer.com/user/me?access_token=" + accessT
 
 	// Unmarshal user info
-	var result model.UserInfo
-	err := getUrl(url, &result)
+	var result DeezerUserInfo
+	err := getDZUrl(urlDZ, &result)
 	if err != nil {
 		return nil
 	}
@@ -89,18 +110,18 @@ func getUserInfo(accessT string) *model.UserInfo {
 }
 
 // Get User Music
-func getUserTracks(accessT string) []model.Track {
-	var tracks []model.Track
+func getDZUserTracks(accessT string) []DeezerTrack {
+	var tracks []DeezerTrack
 	url := "https://api.deezer.com/user/me/tracks?access_token=" + accessT
 
 	for {
 		var result struct {
-			Data    []model.Track `json:"data"`
+			Data    []DeezerTrack `json:"data"`
 			Total   int           `json:"total"`
 			NextURL *string       `json:"next,omitempty"`
 		}
 
-		err := getUrl(url, &result)
+		err := getDZUrl(url, &result)
 		if err != nil {
 			return nil
 		}
@@ -116,7 +137,7 @@ func getUserTracks(accessT string) []model.Track {
 	return tracks
 }
 
-func getUrl(url string, result interface{}) error {
+func getDZUrl(url string, result interface{}) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

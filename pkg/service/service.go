@@ -6,23 +6,30 @@ import (
 )
 
 type User interface {
-	GetAllUsers() ([]model.User, error)
+	GetAllUsersDB() ([]model.User, error)
 }
 
 type Deezer interface {
 	GetDeezerAccessToken(code string) string
-	GetDeezerUserMusic(token string) []model.Track
-	CheckAccessToken(token string) bool
+	GetDeezerUserMusic(token string) []DeezerTrack
+	CheckDeezerAccessToken(token string) bool
+}
+
+type Spotify interface {
+	GetSpotifyAccessToken(code string) string
+	CheckSpotifyAccessToken(token string) bool
 }
 
 type Service struct {
 	User
 	Deezer
+	Spotify
 }
 
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
-		User:   NewUserService(repos.User),
-		Deezer: NewDeezerService(repos.User),
+		User:    NewUserService(repos.User),
+		Deezer:  NewDeezerService(repos.User),
+		Spotify: NewSpotifyService(repos.User),
 	}
 }

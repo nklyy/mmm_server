@@ -15,6 +15,6 @@ func NewUserService(repo repository.User) *UserService {
 	}
 }
 
-func (us *UserService) GetAllUsers() ([]model.User, error) {
+func (us *UserService) GetAllUsersDB() ([]model.User, error) {
 	return us.repo.GetAllUsers("")
 }

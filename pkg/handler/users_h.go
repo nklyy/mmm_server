@@ -5,7 +5,7 @@ import (
 )
 
 func (h *Handler) allUsers(ctx *fiber.Ctx) error {
-	users, err := h.services.GetAllUsers()
+	users, err := h.services.GetAllUsersDB()
 
 	if err != nil {
 		return ctx.JSON(fiber.Map{"error": err.Error()})
