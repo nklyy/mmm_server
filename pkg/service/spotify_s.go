@@ -36,6 +36,7 @@ type SpotifyUserInfo struct {
 
 func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	accessT := getSPAccessToken(code)
+	//log.Println("ACCESS", accessT.AccessToken)
 
 	return accessT.AccessToken
 }
@@ -70,6 +71,8 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 		log.Fatalln(err)
 	}
 
+	//log.Println("BODY",string(body))
+
 	// Unmarshal access token
 	var result SpotifyAccessToken
 	err = json.Unmarshal(body, &result)
@@ -78,7 +81,6 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 }
 
 func getSPUserInfo(accessT string) *SpotifyUserInfo {
-	fmt.Println("1231312312")
 	urlSP := "https://api.spotify.com/v1/me"
 
 	var result SpotifyUserInfo
@@ -96,6 +98,7 @@ func getSPUrl(url string, result interface{}, token string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -104,6 +107,8 @@ func getSPUrl(url string, result interface{}, token string) error {
 	}
 
 	defer resp.Body.Close()
+
+	//fmt.Println("RES",resp)
 
 	if resp.StatusCode == http.StatusNoContent {
 		return nil
@@ -117,7 +122,7 @@ func getSPUrl(url string, result interface{}, token string) error {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(string(body))
+	fmt.Println("RESP BODY", string(body))
 
 	err = json.Unmarshal(body, result)
 	if err != nil {
