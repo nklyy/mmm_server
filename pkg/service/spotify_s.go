@@ -30,8 +30,21 @@ type SpotifyAccessToken struct {
 }
 
 type SpotifyUserInfo struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Country     string `json:"country"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+}
+
+type SpotifyTrack struct {
+	//AddedAt string `json:"added_at"`
+	Track struct {
+		ID    string `json:"id"`
+		Name  string `json:"name"`
+		Type  string `json:"type"`
+		Album struct {
+			Name string `json:"name"`
+		} `json:"album"`
+	} `json:"track"`
 }
 
 func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
@@ -44,9 +57,16 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 func (ss *SpotifyService) CheckSpotifyAccessToken(token string) bool {
 	user := getSPUserInfo(token)
 
-	fmt.Println(user)
+	if user.Email != "" {
+		return true
+	}
 
-	return true
+	return false
+}
+
+func (ss *SpotifyService) GetSpotifyUserMusic(token string) []SpotifyTrack {
+	userMusic := getSPUserTracks(token)
+	return userMusic
 }
 
 func getSPAccessToken(code string) SpotifyAccessToken {
@@ -54,10 +74,19 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 	urlD.Add("grant_type", "authorization_code")
 	urlD.Add("code", code)
 	urlD.Add("redirect_uri", "http://localhost:4000/v1/spotify/callback")
-	urlD.Add("client_id", "a45422e6fcc04cc6932840b3372581f5")
-	urlD.Add("client_secret", "c7bf659fdd5d40aca23125e19bf5d706")
 
-	respAccess, err := http.Post("https://accounts.spotify.com/api/token", "application/x-www-form-urlencoded", strings.NewReader(urlD.Encode()))
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(urlD.Encode()))
+	if err != nil {
+		log.Fatalf("ERROR %v", err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth("6b990a58d275455da234d248fda89722", "bfa229942d1a444f9ab9e91266a42d73")
+
+	//respAccess, err := http.Post("https://accounts.spotify.com/api/token", "application/x-www-form-urlencoded", strings.NewReader(urlD.Encode()))
+
+	respAccess, err := client.Do(req)
 
 	if err != nil {
 		log.Fatalf("ERROR %v", err)
@@ -71,13 +100,40 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 		log.Fatalln(err)
 	}
 
-	//log.Println("BODY",string(body))
-
 	// Unmarshal access token
 	var result SpotifyAccessToken
 	err = json.Unmarshal(body, &result)
 
 	return result
+}
+
+func getSPUserTracks(accessT string) []SpotifyTrack {
+	var tracks []SpotifyTrack
+	u := "https://api.spotify.com/v1/me/tracks"
+
+	for {
+		var result struct {
+			Items []SpotifyTrack `json:"items"`
+			//Total   int           `json:"total"`
+			NextURL *string `json:"next,omitempty"`
+		}
+
+		err := getSPUrl(u, &result, accessT)
+		if err != nil {
+			return nil
+		}
+
+		tracks = append(tracks, result.Items...)
+		if result.NextURL == nil {
+			break
+		}
+
+		u = *result.NextURL
+	}
+
+	fmt.Println(tracks)
+
+	return tracks
 }
 
 func getSPUserInfo(accessT string) *SpotifyUserInfo {
@@ -93,22 +149,21 @@ func getSPUserInfo(accessT string) *SpotifyUserInfo {
 }
 
 func getSPUrl(url string, result interface{}, token string) error {
+	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer resp.Body.Close()
-
-	//fmt.Println("RES",resp)
 
 	if resp.StatusCode == http.StatusNoContent {
 		return nil
@@ -121,8 +176,6 @@ func getSPUrl(url string, result interface{}, token string) error {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	fmt.Println("RESP BODY", string(body))
 
 	err = json.Unmarshal(body, result)
 	if err != nil {

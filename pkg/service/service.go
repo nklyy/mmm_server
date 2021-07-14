@@ -18,6 +18,7 @@ type Deezer interface {
 type Spotify interface {
 	GetSpotifyAccessToken(code string) string
 	CheckSpotifyAccessToken(token string) bool
+	GetSpotifyUserMusic(token string) []SpotifyTrack
 }
 
 type Service struct {

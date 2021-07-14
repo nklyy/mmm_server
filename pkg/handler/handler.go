@@ -34,5 +34,6 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Get("/spotify", h.spotifyAuthRedirect)
 		v1.Get("/spotify/callback", h.spotifyCallback)
 		v1.Post("/spotify/checkT", h.checkSpotifyAccessToken)
+		v1.Post("/spotify/userMusic", h.spotifyUserMusic)
 	}
 }

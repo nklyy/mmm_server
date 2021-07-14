@@ -2,10 +2,14 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"net/url"
 )
 
 func (h *Handler) spotifyAuthRedirect(ctx *fiber.Ctx) error {
-	return ctx.Redirect("https://accounts.spotify.com/authorize?client_id=a45422e6fcc04cc6932840b3372581f5&response_type=code&redirect_uri=http://localhost:4000/v1/spotify/callback&scope=user-read-private%20user-read-email%20user-read-playback-state%20user-modify-playback-state%20user-library-modify%20user-library-read&show_dialog=true")
+	scope := url.PathEscape("user-read-private user-read-email user-read-playback-state user-modify-playback-state user-library-modify user-library-read")
+	r := url.PathEscape("http://localhost:4000/v1/spotify/callback")
+
+	return ctx.Redirect("https://accounts.spotify.com/authorize?response_type=code&client_id=6b990a58d275455da234d248fda89722&scope=" + scope + "&redirect_uri=" + r + "&show_dialog=true")
 }
 
 func (h *Handler) spotifyCallback(ctx *fiber.Ctx) error {
@@ -32,4 +36,18 @@ func (h *Handler) checkSpotifyAccessToken(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(fiber.Map{"message": "success"})
+}
+
+func (h *Handler) spotifyUserMusic(ctx *fiber.Ctx) error {
+	var tkn struct {
+		Token string `json:"token"`
+	}
+
+	if err := ctx.BodyParser(&tkn); err != nil {
+		return err
+	}
+
+	uMusic := h.services.GetSpotifyUserMusic(tkn.Token)
+
+	return ctx.JSON(uMusic)
 }
