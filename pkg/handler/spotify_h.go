@@ -51,3 +51,17 @@ func (h *Handler) spotifyUserMusic(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(uMusic)
 }
+
+func (h *Handler) moveToSpotify(ctx *fiber.Ctx) error {
+	var tkn struct {
+		Code string `json:"code"`
+	}
+
+	if err := ctx.BodyParser(&tkn); err != nil {
+		return err
+	}
+
+	h.services.MoveToSpotify(string(ctx.Body()), tkn.Code)
+
+	return ctx.JSON("")
+}

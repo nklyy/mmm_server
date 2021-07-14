@@ -19,6 +19,7 @@ type Spotify interface {
 	GetSpotifyAccessToken(code string) string
 	CheckSpotifyAccessToken(token string) bool
 	GetSpotifyUserMusic(token string) []SpotifyTrack
+	MoveToSpotify(tracks string, code string)
 }
 
 type Service struct {

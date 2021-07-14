@@ -69,6 +69,28 @@ func (ss *SpotifyService) GetSpotifyUserMusic(token string) []SpotifyTrack {
 	return userMusic
 }
 
+func (ss *SpotifyService) MoveToSpotify(mm string, code string) {
+	var tracks struct {
+		Tracks []DeezerTrack `json:"tracks"`
+	}
+
+	err := json.Unmarshal([]byte(mm), &tracks)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, track := range tracks.Tracks {
+		s := fmt.Sprintf("%s - %s", track.Artist.Name, track.Title)
+		fmt.Println(s)
+		err := searchSPTrack(track.Title, track.Artist.Name, s, code)
+		fmt.Println(err)
+		if err != nil {
+			return
+		}
+		break
+	}
+}
+
 func getSPAccessToken(code string) SpotifyAccessToken {
 	urlD := url.Values{}
 	urlD.Add("grant_type", "authorization_code")
@@ -181,6 +203,45 @@ func getSPUrl(url string, result interface{}, token string) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func searchSPTrack(title string, artist string, fullStr string, code string) error {
+	//t := url.PathEscape(title)
+	//a := url.PathEscape(artist)
+	fS := url.PathEscape(fullStr)
+
+	sUrl := "https://api.spotify.com/v1/search?q=" + fS + "type=track"
+
+	aToken := getSPAccessToken(code)
+	fmt.Println(aToken.AccessToken)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", sUrl, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Bearer "+aToken.AccessToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Println(string(body))
+
+	//err = json.Unmarshal(body, result)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
