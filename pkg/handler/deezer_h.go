@@ -2,18 +2,25 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
 func (h *Handler) deezerAuthRedirect(ctx *fiber.Ctx) error {
-	return ctx.Redirect("https://connect.deezer.com/oauth/auth.php?app_id=491682&redirect_uri=http://localhost:4000/v1/deezer/callback&perms=basic_access,manage_library", 302)
+	m := ctx.Query("m")
+	questId := ctx.Query("questId")
+	return ctx.Redirect(
+		"https://connect.deezer.com/oauth/auth.php?app_id=491682&redirect_uri=http://localhost:4000/v1/deezer/callback&perms=basic_access,manage_library&state="+m+","+questId,
+		302)
 }
 
 func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 	code := ctx.Query("code")
+	state := ctx.Query("state")
+	splitState := strings.Split(state, ",")
 
 	token := h.services.GetDeezerAccessToken(code)
 
-	return ctx.Redirect("http://localhost:3000/cf?type=d&code=" + token)
+	return ctx.Redirect("http://localhost:3000/cf?type=d&code=" + token + "&m=" + splitState[0] + "&qi=" + splitState[1])
 }
 
 func (h *Handler) checkDeezerAccessToken(ctx *fiber.Ctx) error {
