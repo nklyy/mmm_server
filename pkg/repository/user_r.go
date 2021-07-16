@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
-	"log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mmm_server/pkg/model"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserMongoDb struct {
@@ -17,20 +19,48 @@ func NewUserMongoDb(db *mongo.Database) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
-func (ur *UserMongoDb) GetAllUsers(sort string) ([]model.User, error) {
-	var users []model.User
+func (ur *UserMongoDb) GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error) {
+	var music []model.GeneralMusicStruct
 
-	cursor, err := ur.db.Collection("user").Find(context.TODO(), bson.M{})
+	err := ur.db.Collection("user").FindOne(context.TODO(), bson.M{"guest_id": guestID}).Decode(&music)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	err = cursor.All(context.TODO(), &users)
-	if err != nil {
-		log.Fatal(err)
+	return music, nil
+}
+
+func (ur *UserMongoDb) CreateGuestUserDB(guestID string) (bool, error) {
+	var user model.User
+	user.ID = primitive.NewObjectID()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
+	user.GuestId = guestID
+	user.Music = []model.GeneralMusicStruct{}
+
+	mod := mongo.IndexModel{
+		Keys:    bson.M{"created_at": 1}, // index in ascending order or -1 for descending order
+		Options: options.Index().SetExpireAfterSeconds(60),
 	}
 
-	log.Println(users)
+	_, err := ur.db.Collection("user").Indexes().CreateOne(context.TODO(), mod)
+	if err != nil {
+		return false, err
+	}
 
-	return users, err
+	_, err = ur.db.Collection("user").InsertOne(context.TODO(), user)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (ur *UserMongoDb) UpdateGuestUserDB(guestID string, uMusic []model.GeneralMusicStruct) (bool, error) {
+	_, err := ur.db.Collection("user").UpdateOne(context.TODO(), bson.M{"guest_id": guestID}, bson.D{{"$set", bson.D{{"music", uMusic}}}})
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

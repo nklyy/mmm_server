@@ -15,12 +15,6 @@ func NewHandler(services *service.Service) *Handler {
 }
 
 func (h *Handler) InitialRoute(route fiber.Router) {
-	user := route.Group("/user")
-
-	{
-		user.Get("/", h.allUsers)
-	}
-
 	v1 := route.Group("/v1")
 
 	{
@@ -29,6 +23,7 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Get("/deezer/callback", h.deezerCallback)
 		v1.Post("/deezer/checkT", h.checkDeezerAccessToken)
 		v1.Post("/deezer/userMusic", h.deezerUserMusic)
+		v1.Post("/spotify/moveToDeezer", h.moveToDeezer)
 
 		// Spotify
 		v1.Get("/spotify", h.spotifyAuthRedirect)
@@ -36,5 +31,8 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Post("/spotify/checkT", h.checkSpotifyAccessToken)
 		v1.Post("/spotify/userMusic", h.spotifyUserMusic)
 		v1.Post("/spotify/moveToSpotify", h.moveToSpotify)
+
+		// User
+		v1.Get("/userMusic", h.getUserMusic)
 	}
 }

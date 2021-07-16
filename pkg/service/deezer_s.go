@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
+	"strconv"
 )
 
 type DeezerService struct {
@@ -60,11 +62,13 @@ func (ds *DeezerService) CheckDeezerAccessToken(token string) bool {
 	return false
 }
 
-func (ds *DeezerService) GetDeezerUserMusic(token string) []DeezerTrack {
-	//userInfo := getUserInfo(token)
+func (ds *DeezerService) GetDeezerUserMusic(token string) []model.GeneralMusicStruct {
 	userTracks := getDZUserTracks(token)
-
 	return userTracks
+}
+
+func (ds *DeezerService) MoveToDeezer(tracks []model.GeneralMusicStruct, code string) {
+
 }
 
 // Get Access Token
@@ -110,7 +114,7 @@ func getDZUserInfo(accessT string) *DeezerUserInfo {
 }
 
 // Get User Music
-func getDZUserTracks(accessT string) []DeezerTrack {
+func getDZUserTracks(accessT string) []model.GeneralMusicStruct {
 	var tracks []DeezerTrack
 	url := "https://api.deezer.com/user/me/tracks?access_token=" + accessT
 
@@ -134,7 +138,12 @@ func getDZUserTracks(accessT string) []DeezerTrack {
 		url = *result.NextURL
 	}
 
-	return tracks
+	var generalMS []model.GeneralMusicStruct
+	for _, track := range tracks {
+		generalMS = append(generalMS, model.GeneralMusicStruct{ID: strconv.Itoa(track.ID), AlbumName: track.Album.Title, SongName: track.Title})
+	}
+
+	return generalMS
 }
 
 func getDZUrl(url string, result interface{}) error {

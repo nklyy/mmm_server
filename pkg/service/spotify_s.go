@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
 	"net/url"
@@ -49,7 +50,6 @@ type SpotifyTrack struct {
 
 func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	accessT := getSPAccessToken(code)
-	//log.Println("ACCESS", accessT.AccessToken)
 
 	return accessT.AccessToken
 }
@@ -64,26 +64,15 @@ func (ss *SpotifyService) CheckSpotifyAccessToken(token string) bool {
 	return false
 }
 
-func (ss *SpotifyService) GetSpotifyUserMusic(token string) []SpotifyTrack {
-	userMusic := getSPUserTracks(token)
+func (ss *SpotifyService) GetSpotifyUserMusic(code string) []model.GeneralMusicStruct {
+	userMusic := getSPUserTracks(code)
 	return userMusic
 }
 
-func (ss *SpotifyService) MoveToSpotify(mm string, code string) {
-	var tracks struct {
-		Tracks []DeezerTrack `json:"tracks"`
-	}
-
-	err := json.Unmarshal([]byte(mm), &tracks)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	for _, track := range tracks.Tracks {
-		s := fmt.Sprintf("%s - %s", track.Artist.Name, track.Title)
-		fmt.Println(s)
-		err := searchSPTrack(track.Title, track.Artist.Name, s, code)
-		fmt.Println(err)
+func (ss *SpotifyService) MoveToSpotify(tracks []model.GeneralMusicStruct, code string) {
+	for _, track := range tracks {
+		s := fmt.Sprintf("%s - %s", track.AlbumName, track.SongName)
+		err := searchSPTrack(track.AlbumName, track.SongName, s, code)
 		if err != nil {
 			return
 		}
@@ -129,7 +118,7 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 	return result
 }
 
-func getSPUserTracks(accessT string) []SpotifyTrack {
+func getSPUserTracks(accessT string) []model.GeneralMusicStruct {
 	var tracks []SpotifyTrack
 	u := "https://api.spotify.com/v1/me/tracks"
 
@@ -153,9 +142,12 @@ func getSPUserTracks(accessT string) []SpotifyTrack {
 		u = *result.NextURL
 	}
 
-	fmt.Println(tracks)
+	var generalMS []model.GeneralMusicStruct
+	for _, track := range tracks {
+		generalMS = append(generalMS, model.GeneralMusicStruct{ID: track.Track.ID, AlbumName: track.Track.Album.Name, SongName: track.Track.Name})
+	}
 
-	return tracks
+	return generalMS
 }
 
 func getSPUserInfo(accessT string) *SpotifyUserInfo {
@@ -215,7 +207,6 @@ func searchSPTrack(title string, artist string, fullStr string, code string) err
 	sUrl := "https://api.spotify.com/v1/search?q=" + fS + "type=track"
 
 	aToken := getSPAccessToken(code)
-	fmt.Println(aToken.AccessToken)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", sUrl, nil)
@@ -231,12 +222,12 @@ func searchSPTrack(title string, artist string, fullStr string, code string) err
 		log.Fatal(err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 
 	//err = json.Unmarshal(body, result)
 	//if err != nil {

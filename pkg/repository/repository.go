@@ -1,13 +1,14 @@
 package repository
 
 import (
-	"mmm_server/pkg/model"
-
 	"go.mongodb.org/mongo-driver/mongo"
+	"mmm_server/pkg/model"
 )
 
 type User interface {
-	GetAllUsers(sort string) ([]model.User, error)
+	GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error)
+	CreateGuestUserDB(guestID string) (bool, error)
+	UpdateGuestUserDB(guestID string, uMusic []model.GeneralMusicStruct) (bool, error)
 }
 
 type Repository struct {

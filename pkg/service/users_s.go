@@ -15,6 +15,20 @@ func NewUserService(repo repository.User) *UserService {
 	}
 }
 
-func (us *UserService) GetAllUsersDB() ([]model.User, error) {
-	return us.repo.GetAllUsers("")
+func (us *UserService) GetUserMusic(guestID string) ([]model.GeneralMusicStruct, error) {
+	music, err := us.repo.GetUserMusicDB(guestID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return music, nil
+}
+
+func (us *UserService) CreateGuestUser(guestID string) {
+	us.repo.CreateGuestUserDB(guestID)
+}
+
+func (us *UserService) UpdateGuestUser(guestID string, uMusic []model.GeneralMusicStruct) {
+	us.repo.UpdateGuestUserDB(guestID, uMusic)
 }
