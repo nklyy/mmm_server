@@ -55,9 +55,9 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 }
 
 func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
-	user, _ := ss.repo.GetUserInfo(guestID)
+	user, _ := ss.repo.GetUserDB(guestID)
 
-	if user.AccessToken != "" {
+	if user.AccessTokenFind != "" {
 		return true
 	}
 
@@ -65,16 +65,20 @@ func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
 }
 
 func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct {
-	accessToken, _ := ss.repo.GetUserInfo(guestID)
+	accessToken, _ := ss.repo.GetUserDB(guestID)
 
-	userMusic := getSPUserTracks(accessToken.AccessToken)
+	userMusic := getSPUserTracks(accessToken.AccessTokenFind)
 	return userMusic
 }
 
-func (ss *SpotifyService) MoveToSpotify(tracks []model.GeneralMusicStruct, guestID string) {
+func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) {
+	//fmt.Println("ACCESS", accessToken)
+	//fmt.Println("TRACKS", tracks)
+
 	for _, track := range tracks {
 		s := fmt.Sprintf("%s - %s", track.AlbumName, track.SongName)
-		err := searchSPTrack(track.AlbumName, track.SongName, s, guestID)
+		fmt.Println(s)
+		err := searchSPTrack(track.AlbumName, track.SongName, s, accessToken)
 		if err != nil {
 			return
 		}
@@ -201,14 +205,13 @@ func getSPUrl(url string, result interface{}, token string) error {
 	return nil
 }
 
-func searchSPTrack(title string, artist string, fullStr string, code string) error {
+func searchSPTrack(title string, artist string, fullStr string, accessT string) error {
+	fmt.Println("ACCESS", accessT)
 	//t := url.PathEscape(title)
 	//a := url.PathEscape(artist)
 	fS := url.PathEscape(fullStr)
 
 	sUrl := "https://api.spotify.com/v1/search?q=" + fS + "type=track"
-
-	aToken := getSPAccessToken(code)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", sUrl, nil)
@@ -217,19 +220,20 @@ func searchSPTrack(title string, artist string, fullStr string, code string) err
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Authorization", "Bearer "+aToken.AccessToken)
+	req.Header.Add("Authorization", "Bearer "+accessT)
 
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 
-	_, err = ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	//fmt.Println(string(body))
+	fmt.Println(string(body))
 
 	//err = json.Unmarshal(body, result)
 	//if err != nil {

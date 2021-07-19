@@ -18,10 +18,21 @@ func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 	state := ctx.Query("state")
 	splitState := strings.Split(state, ",")
 
-	token := h.services.GetDeezerAccessToken(code)
-
 	// Create Guest User
-	h.services.CreateGuestUser(splitState[1], token)
+	if splitState[0] == string('f') {
+		findAccessToken := h.services.GetDeezerAccessToken(code)
+
+		h.services.CreateGuestUser(splitState[1], findAccessToken)
+	}
+
+	if splitState[0] == string('t') {
+		accessToken := h.services.GetDeezerAccessToken(code)
+
+		user, _ := h.services.GetUser(splitState[1])
+		user.AccessTokenMove = accessToken
+
+		h.services.UpdateGuestUser(splitState[1], user)
+	}
 
 	return ctx.Redirect("http://localhost:3000/cf?type=d&&m=" + splitState[0] + "&gi=" + splitState[1])
 }
@@ -53,10 +64,12 @@ func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
 		return err
 	}
 
+	user, _ := h.services.GetUser(tkn.GuestID)
 	uMusic := h.services.GetDeezerUserMusic(tkn.GuestID)
 
 	// Update Guest User Music
-	h.services.UpdateGuestUser(tkn.GuestID, uMusic)
+	user.Music = uMusic
+	h.services.UpdateGuestUser(tkn.GuestID, user)
 
 	return ctx.JSON(uMusic)
 }
@@ -72,12 +85,12 @@ func (h *Handler) moveToDeezer(ctx *fiber.Ctx) error {
 	}
 
 	// Get Guest User Music
-	music, err := h.services.GetUserMusic(tkn.GuestID)
+	info, err := h.services.GetUser(tkn.GuestID)
 	if err != nil {
 		return err
 	}
 
-	h.services.MoveToDeezer(music, tkn.Code)
+	h.services.MoveToDeezer(info.AccessTokenMove, info.Music)
 
 	return ctx.JSON("")
 }

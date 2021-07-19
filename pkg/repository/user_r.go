@@ -19,7 +19,7 @@ func NewUserMongoDb(db *mongo.Database) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
-func (ur *UserMongoDb) GetUserInfo(guestID string) (model.User, error) {
+func (ur *UserMongoDb) GetUserDB(guestID string) (model.User, error) {
 	var user model.User
 
 	err := ur.db.Collection("user").FindOne(context.TODO(), bson.M{"guest_id": guestID}).Decode(&user)
@@ -30,25 +30,14 @@ func (ur *UserMongoDb) GetUserInfo(guestID string) (model.User, error) {
 	return user, nil
 }
 
-func (ur *UserMongoDb) GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error) {
-	var music []model.GeneralMusicStruct
-
-	err := ur.db.Collection("user").FindOne(context.TODO(), bson.M{"guest_id": guestID}).Decode(&music)
-	if err != nil {
-		return nil, err
-	}
-
-	return music, nil
-}
-
-func (ur *UserMongoDb) CreateGuestUserDB(guestID string, accessT string) (bool, error) {
+func (ur *UserMongoDb) CreateGuestUserDB(guestID string, findAccessT string) (bool, error) {
 	var user model.User
 	user.ID = primitive.NewObjectID()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	user.GuestId = guestID
-	user.AccessToken = accessT
 	user.Music = []model.GeneralMusicStruct{}
+	user.AccessTokenFind = findAccessT
 
 	mod := mongo.IndexModel{
 		Keys:    bson.M{"created_at": 1}, // index in ascending order or -1 for descending order
@@ -68,8 +57,8 @@ func (ur *UserMongoDb) CreateGuestUserDB(guestID string, accessT string) (bool, 
 	return true, nil
 }
 
-func (ur *UserMongoDb) UpdateGuestUserDB(guestID string, uMusic []model.GeneralMusicStruct) (bool, error) {
-	_, err := ur.db.Collection("user").UpdateOne(context.TODO(), bson.M{"guest_id": guestID}, bson.D{{"$set", bson.D{{"music", uMusic}}}})
+func (ur *UserMongoDb) UpdateGuestUserDB(guestID string, user model.User) (bool, error) {
+	_, err := ur.db.Collection("user").UpdateOne(context.TODO(), bson.M{"guest_id": guestID}, bson.D{{"$set", user}})
 	if err != nil {
 		return false, err
 	}

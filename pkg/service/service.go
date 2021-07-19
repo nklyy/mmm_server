@@ -6,23 +6,23 @@ import (
 )
 
 type User interface {
-	GetUserMusic(guestID string) ([]model.GeneralMusicStruct, error)
-	CreateGuestUser(guestID string, accessT string)
-	UpdateGuestUser(guestID string, uMusic []model.GeneralMusicStruct)
+	GetUser(guestID string) (model.User, error)
+	CreateGuestUser(guestID string, findAccessToken string)
+	UpdateGuestUser(guestID string, user model.User)
 }
 
 type Deezer interface {
 	GetDeezerAccessToken(code string) string
 	GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckDeezerAccessToken(guestID string) bool
-	MoveToDeezer(tracks []model.GeneralMusicStruct, guestID string)
+	MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct)
 }
 
 type Spotify interface {
 	GetSpotifyAccessToken(code string) string
 	GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckSpotifyAccessToken(guestID string) bool
-	MoveToSpotify(tracks []model.GeneralMusicStruct, guestID string)
+	MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct)
 }
 
 type Service struct {

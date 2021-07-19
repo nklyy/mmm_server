@@ -6,10 +6,9 @@ import (
 )
 
 type User interface {
-	GetUserInfo(guestID string) (model.User, error)
-	GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error)
-	CreateGuestUserDB(guestID string, accessT string) (bool, error)
-	UpdateGuestUserDB(guestID string, uMusic []model.GeneralMusicStruct) (bool, error)
+	GetUserDB(guestID string) (model.User, error)
+	CreateGuestUserDB(guestID string, findAccessToken string) (bool, error)
+	UpdateGuestUserDB(guestID string, user model.User) (bool, error)
 }
 
 type Repository struct {

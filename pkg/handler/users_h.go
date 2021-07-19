@@ -13,11 +13,11 @@ func (h *Handler) getUserMusic(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	users, err := h.services.GetUserMusic(tkn.GuestID)
+	users, err := h.services.GetUser(tkn.GuestID)
 
 	if err != nil {
 		return ctx.JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return ctx.JSON(users)
+	return ctx.JSON(users.Music)
 }
