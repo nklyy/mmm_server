@@ -25,10 +25,16 @@ func (us *UserService) GetUserMusic(guestID string) ([]model.GeneralMusicStruct,
 	return music, nil
 }
 
-func (us *UserService) CreateGuestUser(guestID string) {
-	us.repo.CreateGuestUserDB(guestID)
+func (us *UserService) CreateGuestUser(guestID string, accessT string) {
+	_, err := us.repo.CreateGuestUserDB(guestID, accessT)
+	if err != nil {
+		return
+	}
 }
 
 func (us *UserService) UpdateGuestUser(guestID string, uMusic []model.GeneralMusicStruct) {
-	us.repo.UpdateGuestUserDB(guestID, uMusic)
+	_, err := us.repo.UpdateGuestUserDB(guestID, uMusic)
+	if err != nil {
+		return
+	}
 }

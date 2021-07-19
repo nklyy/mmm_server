@@ -6,8 +6,9 @@ import (
 )
 
 type User interface {
+	GetUserInfo(guestID string) (model.User, error)
 	GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error)
-	CreateGuestUserDB(guestID string) (bool, error)
+	CreateGuestUserDB(guestID string, accessT string) (bool, error)
 	UpdateGuestUserDB(guestID string, uMusic []model.GeneralMusicStruct) (bool, error)
 }
 

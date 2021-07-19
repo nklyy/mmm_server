@@ -54,25 +54,27 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	return accessT.AccessToken
 }
 
-func (ss *SpotifyService) CheckSpotifyAccessToken(token string) bool {
-	user := getSPUserInfo(token)
+func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
+	user, _ := ss.repo.GetUserInfo(guestID)
 
-	if user.Email != "" {
+	if user.AccessToken != "" {
 		return true
 	}
 
 	return false
 }
 
-func (ss *SpotifyService) GetSpotifyUserMusic(code string) []model.GeneralMusicStruct {
-	userMusic := getSPUserTracks(code)
+func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct {
+	accessToken, _ := ss.repo.GetUserInfo(guestID)
+
+	userMusic := getSPUserTracks(accessToken.AccessToken)
 	return userMusic
 }
 
-func (ss *SpotifyService) MoveToSpotify(tracks []model.GeneralMusicStruct, code string) {
+func (ss *SpotifyService) MoveToSpotify(tracks []model.GeneralMusicStruct, guestID string) {
 	for _, track := range tracks {
 		s := fmt.Sprintf("%s - %s", track.AlbumName, track.SongName)
-		err := searchSPTrack(track.AlbumName, track.SongName, s, code)
+		err := searchSPTrack(track.AlbumName, track.SongName, s, guestID)
 		if err != nil {
 			return
 		}

@@ -19,6 +19,17 @@ func NewUserMongoDb(db *mongo.Database) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
+func (ur *UserMongoDb) GetUserInfo(guestID string) (model.User, error) {
+	var user model.User
+
+	err := ur.db.Collection("user").FindOne(context.TODO(), bson.M{"guest_id": guestID}).Decode(&user)
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
 func (ur *UserMongoDb) GetUserMusicDB(guestID string) ([]model.GeneralMusicStruct, error) {
 	var music []model.GeneralMusicStruct
 
@@ -30,12 +41,13 @@ func (ur *UserMongoDb) GetUserMusicDB(guestID string) ([]model.GeneralMusicStruc
 	return music, nil
 }
 
-func (ur *UserMongoDb) CreateGuestUserDB(guestID string) (bool, error) {
+func (ur *UserMongoDb) CreateGuestUserDB(guestID string, accessT string) (bool, error) {
 	var user model.User
 	user.ID = primitive.NewObjectID()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	user.GuestId = guestID
+	user.AccessToken = accessT
 	user.Music = []model.GeneralMusicStruct{}
 
 	mod := mongo.IndexModel{

@@ -7,22 +7,22 @@ import (
 
 type User interface {
 	GetUserMusic(guestID string) ([]model.GeneralMusicStruct, error)
-	CreateGuestUser(guestID string)
+	CreateGuestUser(guestID string, accessT string)
 	UpdateGuestUser(guestID string, uMusic []model.GeneralMusicStruct)
 }
 
 type Deezer interface {
 	GetDeezerAccessToken(code string) string
-	GetDeezerUserMusic(code string) []model.GeneralMusicStruct
-	CheckDeezerAccessToken(code string) bool
-	MoveToDeezer(tracks []model.GeneralMusicStruct, code string)
+	GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct
+	CheckDeezerAccessToken(guestID string) bool
+	MoveToDeezer(tracks []model.GeneralMusicStruct, guestID string)
 }
 
 type Spotify interface {
 	GetSpotifyAccessToken(code string) string
-	CheckSpotifyAccessToken(code string) bool
-	GetSpotifyUserMusic(code string) []model.GeneralMusicStruct
-	MoveToSpotify(tracks []model.GeneralMusicStruct, code string)
+	GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct
+	CheckSpotifyAccessToken(guestID string) bool
+	MoveToSpotify(tracks []model.GeneralMusicStruct, guestID string)
 }
 
 type Service struct {
