@@ -142,7 +142,7 @@ func getDZUserTracks(accessT string) []model.GeneralMusicStruct {
 
 	var generalMS []model.GeneralMusicStruct
 	for _, track := range tracks {
-		generalMS = append(generalMS, model.GeneralMusicStruct{ID: strconv.Itoa(track.ID), AlbumName: track.Album.Title, SongName: track.Title})
+		generalMS = append(generalMS, model.GeneralMusicStruct{ID: strconv.Itoa(track.ID), ArtistName: track.Artist.Name, SongName: track.Title, AlbumName: track.Album.Title})
 	}
 
 	return generalMS

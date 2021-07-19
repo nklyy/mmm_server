@@ -90,7 +90,7 @@ func (h *Handler) moveToSpotify(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	h.services.MoveToSpotify(info.AccessTokenMove, info.Music)
+	notFoundM := h.services.MoveToSpotify(info.AccessTokenMove, info.Music)
 
-	return ctx.JSON("")
+	return ctx.JSON(notFoundM)
 }

@@ -7,10 +7,10 @@ import (
 )
 
 type GeneralMusicStruct struct {
-	ID       string
-	SongName string
-	//ArtistName string
-	AlbumName string
+	ID         string
+	ArtistName string
+	SongName   string
+	AlbumName  string
 }
 
 type User struct {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type SpotifyService struct {
@@ -45,6 +46,9 @@ type SpotifyTrack struct {
 		Album struct {
 			Name string `json:"name"`
 		} `json:"album"`
+		Artists []struct {
+			Name string `json:"name"`
+		} `json:"artists"`
 	} `json:"track"`
 }
 
@@ -71,19 +75,32 @@ func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMus
 	return userMusic
 }
 
-func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) {
-	//fmt.Println("ACCESS", accessToken)
-	//fmt.Println("TRACKS", tracks)
+func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) []string {
+	var found []string
+	var notFound []string
 
 	for _, track := range tracks {
-		s := fmt.Sprintf("%s - %s", track.AlbumName, track.SongName)
-		fmt.Println(s)
-		err := searchSPTrack(track.AlbumName, track.SongName, s, accessToken)
-		if err != nil {
-			return
+		s := fmt.Sprintf("%s %s", track.ArtistName, track.SongName)
+		id, notFoundT := searchSPTrack(s, track.AlbumName, accessToken)
+		if notFoundT != "" {
+			notFound = append(notFound, notFoundT)
 		}
-		break
+
+		found = append(found, id)
 	}
+
+	fmt.Println("FOUND", found, len(found))
+	fmt.Println("NotFound", notFound, len(notFound))
+
+	c := 0
+	for _, id := range found {
+		c += 1
+		time.Sleep(2 * time.Second)
+		moveTrack(id, accessToken)
+		fmt.Println(c)
+	}
+
+	return notFound
 }
 
 func getSPAccessToken(code string) SpotifyAccessToken {
@@ -150,7 +167,7 @@ func getSPUserTracks(accessT string) []model.GeneralMusicStruct {
 
 	var generalMS []model.GeneralMusicStruct
 	for _, track := range tracks {
-		generalMS = append(generalMS, model.GeneralMusicStruct{ID: track.Track.ID, AlbumName: track.Track.Album.Name, SongName: track.Track.Name})
+		generalMS = append(generalMS, model.GeneralMusicStruct{ID: track.Track.ID, ArtistName: track.Track.Artists[0].Name, SongName: track.Track.Name, AlbumName: track.Track.Album.Name})
 	}
 
 	return generalMS
@@ -199,46 +216,60 @@ func getSPUrl(url string, result interface{}, token string) error {
 
 	err = json.Unmarshal(body, result)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	return nil
 }
 
-func searchSPTrack(title string, artist string, fullStr string, accessT string) error {
-	fmt.Println("ACCESS", accessT)
-	//t := url.PathEscape(title)
-	//a := url.PathEscape(artist)
+func searchSPTrack(fullStr string, albumName string, accessT string) (string, string) {
 	fS := url.PathEscape(fullStr)
 
-	sUrl := "https://api.spotify.com/v1/search?q=" + fS + "type=track"
+	search := url.PathEscape(fS + " album:" + albumName)
+	sUrl := "https://api.spotify.com/v1/search?q=" + search + "&type=track&limit=1"
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", sUrl, nil)
-	if err != nil {
-		return err
+	var result struct {
+		Tracks struct {
+			Items []struct {
+				ID string `json:"id"`
+			} `json:"items"`
+		} `json:"tracks"`
 	}
+	getSPUrl(sUrl, &result, accessT)
+
+	if len(result.Tracks.Items) == 0 {
+		sUrl = "https://api.spotify.com/v1/search?q=" + fS + "&type=track&limit=1"
+		getSPUrl(sUrl, &result, accessT)
+
+		if len(result.Tracks.Items) == 0 {
+			return "", fullStr
+		} else {
+			return result.Tracks.Items[0].ID, ""
+		}
+	} else {
+		return result.Tracks.Items[0].ID, ""
+	}
+}
+
+func moveTrack(id string, accessT string) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest("PUT", "https://api.spotify.com/v1/me/tracks?ids="+string(id), nil)
+	if err != nil {
+		log.Fatalf("ERROR %v", err)
+	}
+
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", "Bearer "+accessT)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	defer resp.Body.Close()
 
-	fmt.Println(string(body))
-
-	//err = json.Unmarshal(body, result)
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil
+	fmt.Println(resp.StatusCode)
 }
