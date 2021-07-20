@@ -47,34 +47,6 @@ type DeezerTrack struct {
 }
 
 func (ds *DeezerService) GetDeezerAccessToken(code string) string {
-	accessT := getDZAccessToken(code)
-
-	return accessT.AccessToken
-}
-
-func (ds *DeezerService) CheckDeezerAccessToken(guestID string) bool {
-	user, _ := ds.repo.GetUserDB(guestID)
-
-	if user.AccessTokenFind != "" {
-		return true
-	}
-
-	return false
-}
-
-func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct {
-	accessToken, _ := ds.repo.GetUserDB(guestID)
-
-	userTracks := getDZUserTracks(accessToken.AccessTokenFind)
-	return userTracks
-}
-
-func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) {
-
-}
-
-// Get Access Token
-func getDZAccessToken(code string) DeezerAccessToken {
 	postBody, _ := json.Marshal(map[string]string{
 		"code": code,
 	})
@@ -95,30 +67,27 @@ func getDZAccessToken(code string) DeezerAccessToken {
 	}
 
 	// Unmarshal access token
-	var result DeezerAccessToken
-	err = json.Unmarshal(body, &result)
+	var dzAccess DeezerAccessToken
+	err = json.Unmarshal(body, &dzAccess)
 
-	return result
+	return dzAccess.AccessToken
 }
 
-// Get Deezer User
-func getDZUserInfo(accessT string) *DeezerUserInfo {
-	urlDZ := "https://api.deezer.com/user/me?access_token=" + accessT
+func (ds *DeezerService) CheckDeezerAccessToken(guestID string) bool {
+	user, _ := ds.repo.GetUserDB(guestID)
 
-	// Unmarshal user info
-	var result DeezerUserInfo
-	err := getDZUrl(urlDZ, &result)
-	if err != nil {
-		return nil
+	if user.AccessTokenFind != "" {
+		return true
 	}
 
-	return &result
+	return false
 }
 
-// Get User Music
-func getDZUserTracks(accessT string) []model.GeneralMusicStruct {
+func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct {
+	accessToken, _ := ds.repo.GetUserDB(guestID)
+
 	var tracks []DeezerTrack
-	url := "https://api.deezer.com/user/me/tracks?access_token=" + accessT
+	url := "https://api.deezer.com/user/me/tracks?access_token=" + accessToken.AccessTokenFind
 
 	for {
 		var result struct {
@@ -148,6 +117,11 @@ func getDZUserTracks(accessT string) []model.GeneralMusicStruct {
 	return generalMS
 }
 
+func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) {
+
+}
+
+// Function helper
 func getDZUrl(url string, result interface{}) error {
 	resp, err := http.Get(url)
 	if err != nil {

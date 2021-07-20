@@ -52,58 +52,16 @@ type SpotifyTrack struct {
 	} `json:"track"`
 }
 
+type ResultSpSearch struct {
+	Tracks struct {
+		Items []struct {
+			ID string `json:"id"`
+		} `json:"items"`
+	} `json:"tracks"`
+}
+
 func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
-	accessT := getSPAccessToken(code)
-
-	return accessT.AccessToken
-}
-
-func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
-	user, _ := ss.repo.GetUserDB(guestID)
-
-	if user.AccessTokenFind != "" {
-		return true
-	}
-
-	return false
-}
-
-func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct {
-	accessToken, _ := ss.repo.GetUserDB(guestID)
-
-	userMusic := getSPUserTracks(accessToken.AccessTokenFind)
-	return userMusic
-}
-
-func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) []string {
-	var found []string
-	var notFound []string
-
-	for _, track := range tracks {
-		s := fmt.Sprintf("%s %s", track.ArtistName, track.SongName)
-		id, notFoundT := searchSPTrack(s, track.AlbumName, accessToken)
-		if notFoundT != "" {
-			notFound = append(notFound, notFoundT)
-		}
-
-		found = append(found, id)
-	}
-
-	fmt.Println("FOUND", found, len(found))
-	fmt.Println("NotFound", notFound, len(notFound))
-
-	c := 0
-	for _, id := range found {
-		c += 1
-		time.Sleep(2 * time.Second)
-		moveTrack(id, accessToken)
-		fmt.Println(c)
-	}
-
-	return notFound
-}
-
-func getSPAccessToken(code string) SpotifyAccessToken {
+	// Create url search
 	urlD := url.Values{}
 	urlD.Add("grant_type", "authorization_code")
 	urlD.Add("code", code)
@@ -117,8 +75,6 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth("6b990a58d275455da234d248fda89722", "bfa229942d1a444f9ab9e91266a42d73")
-
-	//respAccess, err := http.Post("https://accounts.spotify.com/api/token", "application/x-www-form-urlencoded", strings.NewReader(urlD.Encode()))
 
 	respAccess, err := client.Do(req)
 
@@ -135,13 +91,25 @@ func getSPAccessToken(code string) SpotifyAccessToken {
 	}
 
 	// Unmarshal access token
-	var result SpotifyAccessToken
-	err = json.Unmarshal(body, &result)
+	var spAccess SpotifyAccessToken
+	err = json.Unmarshal(body, &spAccess)
 
-	return result
+	return spAccess.AccessToken
 }
 
-func getSPUserTracks(accessT string) []model.GeneralMusicStruct {
+func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
+	user, _ := ss.repo.GetUserDB(guestID)
+
+	if user.AccessTokenFind != "" {
+		return true
+	}
+
+	return false
+}
+
+func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct {
+	accessToken, _ := ss.repo.GetUserDB(guestID)
+
 	var tracks []SpotifyTrack
 	u := "https://api.spotify.com/v1/me/tracks"
 
@@ -152,7 +120,7 @@ func getSPUserTracks(accessT string) []model.GeneralMusicStruct {
 			NextURL *string `json:"next,omitempty"`
 		}
 
-		err := getSPUrl(u, &result, accessT)
+		err := getSPUrl(u, &result, accessToken.AccessTokenFind)
 		if err != nil {
 			return nil
 		}
@@ -173,18 +141,82 @@ func getSPUserTracks(accessT string) []model.GeneralMusicStruct {
 	return generalMS
 }
 
-func getSPUserInfo(accessT string) *SpotifyUserInfo {
-	urlSP := "https://api.spotify.com/v1/me"
+func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) []string {
+	var found []string
+	var notFound []string
+	var moveArr [][]string
 
-	var result SpotifyUserInfo
-	err := getSPUrl(urlSP, &result, accessT)
-	if err != nil {
-		return nil
+	// Search tracks
+	for _, track := range tracks {
+		searchString := fmt.Sprintf("%s %s", track.ArtistName, track.SongName)
+
+		decodeSearchS := url.PathEscape(searchString)
+		decodeAlbumS := url.PathEscape(track.AlbumName)
+
+		searchUrl := "https://api.spotify.com/v1/search?q=" + decodeSearchS + "%20album:" + decodeAlbumS + "&type=track&limit=1"
+
+		var result ResultSpSearch
+		getSPUrl(searchUrl, &result, accessToken)
+
+		if len(result.Tracks.Items) == 0 {
+			searchUrl = "https://api.spotify.com/v1/search?q=" + decodeSearchS + "&type=track&limit=1"
+			getSPUrl(searchUrl, &result, accessToken)
+
+			if len(result.Tracks.Items) == 0 {
+				notFound = append(notFound, searchString)
+			} else {
+				found = append(found, result.Tracks.Items[0].ID)
+			}
+		} else {
+			found = append(found, result.Tracks.Items[0].ID)
+		}
 	}
 
-	return &result
+	if len(found) > 0 {
+		client := &http.Client{}
+
+		// Make chunk array
+		for i := 0; i < len(found); i += 50 {
+			end := i + 50
+
+			if end > len(found) {
+				end = len(found)
+			}
+
+			moveArr = append(moveArr, found[i:end])
+		}
+
+		// Move tracks
+		c := 0
+		for _, ids := range moveArr {
+			c += len(ids)
+
+			time.Sleep(2 * time.Second)
+			req, err := http.NewRequest("PUT", "https://api.spotify.com/v1/me/tracks?ids="+string(strings.Join(ids, ",")), nil)
+			if err != nil {
+				log.Fatalf("ERROR %v", err)
+			}
+
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Accept", "application/json")
+			req.Header.Add("Authorization", "Bearer "+accessToken)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println(resp.StatusCode)
+			fmt.Println(c)
+
+			resp.Body.Close()
+		}
+	}
+
+	return notFound
 }
 
+// Functions - Helpers
 func getSPUrl(url string, result interface{}, token string) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
@@ -221,55 +253,4 @@ func getSPUrl(url string, result interface{}, token string) error {
 	}
 
 	return nil
-}
-
-func searchSPTrack(fullStr string, albumName string, accessT string) (string, string) {
-	fS := url.PathEscape(fullStr)
-
-	search := url.PathEscape(fS + " album:" + albumName)
-	sUrl := "https://api.spotify.com/v1/search?q=" + search + "&type=track&limit=1"
-
-	var result struct {
-		Tracks struct {
-			Items []struct {
-				ID string `json:"id"`
-			} `json:"items"`
-		} `json:"tracks"`
-	}
-	getSPUrl(sUrl, &result, accessT)
-
-	if len(result.Tracks.Items) == 0 {
-		sUrl = "https://api.spotify.com/v1/search?q=" + fS + "&type=track&limit=1"
-		getSPUrl(sUrl, &result, accessT)
-
-		if len(result.Tracks.Items) == 0 {
-			return "", fullStr
-		} else {
-			return result.Tracks.Items[0].ID, ""
-		}
-	} else {
-		return result.Tracks.Items[0].ID, ""
-	}
-}
-
-func moveTrack(id string, accessT string) {
-	client := &http.Client{}
-
-	req, err := http.NewRequest("PUT", "https://api.spotify.com/v1/me/tracks?ids="+string(id), nil)
-	if err != nil {
-		log.Fatalf("ERROR %v", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Authorization", "Bearer "+accessT)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	fmt.Println(resp.StatusCode)
 }
