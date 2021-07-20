@@ -23,7 +23,7 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Get("/deezer/callback", h.deezerCallback)
 		v1.Post("/deezer/checkT", h.checkDeezerAccessToken)
 		v1.Post("/deezer/userMusic", h.deezerUserMusic)
-		v1.Post("/spotify/moveToDeezer", h.moveToDeezer)
+		v1.Post("/deezer/moveToDeezer", h.moveToDeezer)
 
 		// Spotify
 		v1.Get("/spotify", h.spotifyAuthRedirect)

@@ -9,7 +9,10 @@ import (
 	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
+	"time"
 )
 
 type DeezerService struct {
@@ -44,6 +47,12 @@ type DeezerTrack struct {
 		Title string `json:"title"`
 	} `json:"album"`
 	Type string `json:"type"`
+}
+
+type ResultDzSearch struct {
+	Data []struct {
+		ID int `json:"id"`
+	} `json:"data"`
 }
 
 func (ds *DeezerService) GetDeezerAccessToken(code string) string {
@@ -87,7 +96,7 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 	accessToken, _ := ds.repo.GetUserDB(guestID)
 
 	var tracks []DeezerTrack
-	url := "https://api.deezer.com/user/me/tracks?access_token=" + accessToken.AccessTokenFind
+	urlS := "https://api.deezer.com/user/me/tracks?access_token=" + accessToken.AccessTokenFind
 
 	for {
 		var result struct {
@@ -96,7 +105,7 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 			NextURL *string       `json:"next,omitempty"`
 		}
 
-		err := getDZUrl(url, &result)
+		err := getDZUrl(urlS, &result)
 		if err != nil {
 			return nil
 		}
@@ -106,7 +115,7 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 			break
 		}
 
-		url = *result.NextURL
+		urlS = *result.NextURL
 	}
 
 	var generalMS []model.GeneralMusicStruct
@@ -117,15 +126,92 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 	return generalMS
 }
 
-func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) {
+func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) []string {
+	var found []int
+	var notFound []string
 
+	// Search tracks
+	for _, track := range tracks {
+		reg := regexp.MustCompile(`(?i)\(.*|feat.*|- feat.*|- with.*`)
+
+		searchString := fmt.Sprintf("%s %s", track.ArtistName, reg.Split(track.SongName, -1)[0])
+		artistName := url.PathEscape(track.ArtistName)
+		shortSongName := url.PathEscape(reg.Split(track.SongName, -1)[0])
+		shortAlbumName := url.PathEscape(reg.Split(track.AlbumName, -1)[0])
+
+		searchUrl := "https://api.deezer.com/search?q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + shortAlbumName + "\"" + "&limit=1"
+		var result ResultDzSearch
+		getDZUrl(searchUrl, &result)
+
+		// Deep music search
+		if len(result.Data) == 0 {
+			time.Sleep(1 * time.Second)
+			searchUrl = "https://api.deezer.com/search?q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + url.PathEscape(track.SongName) + "\"" + "&limit=1"
+			getDZUrl(searchUrl, &result)
+
+			if len(result.Data) == 0 {
+				time.Sleep(1 * time.Millisecond)
+				searchUrl = "https://api.deezer.com/search/track?q=" + url.PathEscape(searchString) + "&limit=1"
+				getDZUrl(searchUrl, &result)
+
+				if len(result.Data) == 0 {
+					time.Sleep(1 * time.Second)
+					searchUrl = "https://api.deezer.com/search/track?q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
+					getDZUrl(searchUrl, &result)
+
+					if len(result.Data) == 0 {
+						notFound = append(notFound, searchString, track.AlbumName)
+					} else {
+						found = append(found, result.Data[0].ID)
+					}
+				} else {
+					found = append(found, result.Data[0].ID)
+				}
+			} else {
+				found = append(found, result.Data[0].ID)
+			}
+		} else {
+			found = append(found, result.Data[0].ID)
+		}
+	}
+
+	// Move tracks
+	if len(found) > 0 {
+		c := 0
+		for _, id := range found {
+			c += 1
+
+			time.Sleep(1 * time.Second)
+			resp, err := http.Post("https://api.deezer.com/user/me/tracks?access_token="+accessToken+"&track_id="+strconv.Itoa(id), "application/x-www-form-urlencoded", nil)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println(resp.StatusCode)
+			fmt.Println(c)
+
+			resp.Body.Close()
+		}
+	}
+
+	fmt.Println("NOTFOUND", notFound, len(notFound))
+	return notFound
 }
 
 // Function helper
 func getDZUrl(url string, result interface{}) error {
-	resp, err := http.Get(url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	defer resp.Body.Close()

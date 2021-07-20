@@ -15,7 +15,7 @@ type Deezer interface {
 	GetDeezerAccessToken(code string) string
 	GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckDeezerAccessToken(guestID string) bool
-	MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct)
+	MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) []string
 }
 
 type Spotify interface {

@@ -76,7 +76,6 @@ func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
 
 func (h *Handler) moveToDeezer(ctx *fiber.Ctx) error {
 	var tkn struct {
-		Code    string `json:"code"`
 		GuestID string `json:"gi"`
 	}
 
@@ -90,7 +89,7 @@ func (h *Handler) moveToDeezer(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	h.services.MoveToDeezer(info.AccessTokenMove, info.Music)
+	notFoundM := h.services.MoveToDeezer(info.AccessTokenMove, info.Music)
 
-	return ctx.JSON("")
+	return ctx.JSON(notFoundM)
 }
