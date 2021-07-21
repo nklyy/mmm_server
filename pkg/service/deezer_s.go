@@ -139,24 +139,24 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 		shortSongName := url.PathEscape(reg.Split(track.SongName, -1)[0])
 		shortAlbumName := url.PathEscape(reg.Split(track.AlbumName, -1)[0])
 
-		searchUrl := "https://api.deezer.com/search?q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + shortAlbumName + "\"" + "&limit=1"
+		searchUrl := "https://api.deezer.com/search?order=RANKING&q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + shortAlbumName + "\"" + "&limit=1"
 		var result ResultDzSearch
 		getDZUrl(searchUrl, &result)
 
 		// Deep music search
 		if len(result.Data) == 0 {
 			time.Sleep(1 * time.Second)
-			searchUrl = "https://api.deezer.com/search?q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + url.PathEscape(track.SongName) + "\"" + "&limit=1"
+			searchUrl = "https://api.deezer.com/search?order=RANKING&q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + url.PathEscape(track.SongName) + "\"" + "&limit=1"
 			getDZUrl(searchUrl, &result)
 
 			if len(result.Data) == 0 {
 				time.Sleep(1 * time.Millisecond)
-				searchUrl = "https://api.deezer.com/search/track?q=" + url.PathEscape(searchString) + "&limit=1"
+				searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=" + url.PathEscape(searchString) + "&limit=1"
 				getDZUrl(searchUrl, &result)
 
 				if len(result.Data) == 0 {
 					time.Sleep(1 * time.Second)
-					searchUrl = "https://api.deezer.com/search/track?q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
+					searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
 					getDZUrl(searchUrl, &result)
 
 					if len(result.Data) == 0 {
