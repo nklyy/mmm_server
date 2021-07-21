@@ -19,7 +19,7 @@ func NewUserMongoDb(db *mongo.Database) *UserMongoDb {
 	return &UserMongoDb{db: db}
 }
 
-func (ur *UserMongoDb) GetUserDB(guestID string) (model.User, error) {
+func (ur *UserMongoDb) GetGuestUserDB(guestID string) (model.User, error) {
 	var user model.User
 
 	err := ur.db.Collection("user").FindOne(context.TODO(), bson.M{"guest_id": guestID}).Decode(&user)

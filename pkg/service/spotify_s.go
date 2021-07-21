@@ -98,7 +98,7 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 }
 
 func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
-	user, _ := ss.repo.GetUserDB(guestID)
+	user, _ := ss.repo.GetGuestUserDB(guestID)
 
 	if user.AccessTokenFind != "" {
 		return true
@@ -108,7 +108,7 @@ func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {
 }
 
 func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct {
-	accessToken, _ := ss.repo.GetUserDB(guestID)
+	accessToken, _ := ss.repo.GetGuestUserDB(guestID)
 
 	var tracks []SpotifyTrack
 	u := "https://api.spotify.com/v1/me/tracks"

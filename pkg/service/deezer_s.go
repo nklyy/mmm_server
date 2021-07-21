@@ -83,7 +83,7 @@ func (ds *DeezerService) GetDeezerAccessToken(code string) string {
 }
 
 func (ds *DeezerService) CheckDeezerAccessToken(guestID string) bool {
-	user, _ := ds.repo.GetUserDB(guestID)
+	user, _ := ds.repo.GetGuestUserDB(guestID)
 
 	if user.AccessTokenFind != "" {
 		return true
@@ -93,7 +93,7 @@ func (ds *DeezerService) CheckDeezerAccessToken(guestID string) bool {
 }
 
 func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct {
-	accessToken, _ := ds.repo.GetUserDB(guestID)
+	accessToken, _ := ds.repo.GetGuestUserDB(guestID)
 
 	var tracks []DeezerTrack
 	urlS := "https://api.deezer.com/user/me/tracks?access_token=" + accessToken.AccessTokenFind

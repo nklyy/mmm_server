@@ -16,7 +16,7 @@ func NewUserService(repo repository.User) *UserService {
 }
 
 func (us *UserService) GetUser(guestID string) (model.User, error) {
-	user, err := us.repo.GetUserDB(guestID)
+	user, err := us.repo.GetGuestUserDB(guestID)
 	if err != nil {
 		return user, err
 	}

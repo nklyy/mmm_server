@@ -6,7 +6,7 @@ import (
 )
 
 type User interface {
-	GetUserDB(guestID string) (model.User, error)
+	GetGuestUserDB(guestID string) (model.User, error)
 	CreateGuestUserDB(guestID string, findAccessToken string) (bool, error)
 	UpdateGuestUserDB(guestID string, user model.User) (bool, error)
 }
