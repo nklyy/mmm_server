@@ -125,11 +125,6 @@ func (h *Handler) moveToDeezer(c *websocket.Conn) {
 	}
 
 	//err = c.WriteMessage(mt, []byte(strconv.Itoa(len(info.Music))))
-	countMusic, _ := json.Marshal(map[string]int{"lenTracks": len(info.Music)})
-	err = c.WriteMessage(mt, countMusic)
-	if err != nil {
-		return
-	}
 
 	h.services.MoveToDeezer(info.AccessTokenMove, info.Music, c, mt)
 }

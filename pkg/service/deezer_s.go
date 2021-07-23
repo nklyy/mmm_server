@@ -146,17 +146,17 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 		// Deep music search
 		if len(result.Data) == 0 {
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
 			searchUrl = "https://api.deezer.com/search?order=RANKING&q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + url.PathEscape(track.SongName) + "\"" + "&limit=1"
 			getDZUrl(searchUrl, &result)
 
 			if len(result.Data) == 0 {
-				time.Sleep(1 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 				searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=" + url.PathEscape(searchString) + "&limit=1"
 				getDZUrl(searchUrl, &result)
 
 				if len(result.Data) == 0 {
-					time.Sleep(1 * time.Second)
+					time.Sleep(500 * time.Millisecond)
 					searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
 					getDZUrl(searchUrl, &result)
 
@@ -178,13 +178,19 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 	// Move tracks
 	if len(found) > 0 {
+		countMusic, _ := json.Marshal(map[string]int{"lenTracks": len(found)})
+		err := con.WriteMessage(mt, countMusic)
+		if err != nil {
+			return nil
+		}
+
 		c := 0
 		for _, id := range found {
 			c += 1
 
 			countMusic, _ := json.Marshal(map[string]int{"countM": c})
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
 
 			err := con.WriteMessage(mt, countMusic)
 			if err != nil {
