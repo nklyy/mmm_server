@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/gofiber/websocket/v2"
 	"mmm_server/pkg/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +24,7 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Get("/deezer/callback", h.deezerCallback)
 		v1.Post("/deezer/checkT", h.checkDeezerAccessToken)
 		v1.Post("/deezer/userMusic", h.deezerUserMusic)
-		v1.Post("/deezer/moveToDeezer", h.moveToDeezer)
+		v1.Get("/ws/deezer/move", websocket.New(h.moveToDeezer))
 
 		// Spotify
 		v1.Get("/spotify", h.spotifyAuthRedirect)

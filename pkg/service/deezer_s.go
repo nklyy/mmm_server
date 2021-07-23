@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gofiber/websocket/v2"
 	"io/ioutil"
 	"log"
 	"mmm_server/pkg/model"
@@ -126,7 +127,7 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 	return generalMS
 }
 
-func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct) []string {
+func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string {
 	var found []int
 	var notFound []string
 
@@ -181,7 +182,15 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 		for _, id := range found {
 			c += 1
 
+			countMusic, _ := json.Marshal(map[string]int{"countM": c})
+
 			time.Sleep(1 * time.Second)
+
+			err := con.WriteMessage(mt, countMusic)
+			if err != nil {
+				return nil
+			}
+
 			resp, err := http.Post("https://api.deezer.com/user/me/tracks?access_token="+accessToken+"&track_id="+strconv.Itoa(id), "application/x-www-form-urlencoded", nil)
 
 			if err != nil {
@@ -193,6 +202,7 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 			resp.Body.Close()
 		}
+		con.Close()
 	}
 
 	fmt.Println("NOTFOUND", notFound, len(notFound))

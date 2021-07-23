@@ -24,6 +24,15 @@ func Execute() {
 		cors.New(),
 	)
 
+	// Optional middleware
+	app.Use("/v1/ws/deezer/move", func(c *fiber.Ctx) error {
+		if c.Get("host") == "localhost:4000" {
+			c.Locals("Host", "Localhost:4000")
+			return c.Next()
+		}
+		return c.Status(403).SendString("Request origin not allowed")
+	})
+
 	// Init repository, service and handlers
 	newRepository := repository.NewRepository(db)
 	newService := service.NewService(newRepository)
