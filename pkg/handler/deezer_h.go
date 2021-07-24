@@ -52,11 +52,14 @@ func (h *Handler) checkDeezerAccessToken(ctx *fiber.Ctx) error {
 
 	ok := h.services.CheckDeezerAccessToken(cd.GuestID)
 	if !ok {
+		errorMessage, _ := json.Marshal(map[string]string{"error": "Invalid token!"})
+		return ctx.Status(400).Send(errorMessage)
 		//return fiber.NewError(fiber.StatusBadRequest, "Invalid token!")
-		return ctx.JSON(fiber.Map{"error": "Invalid token!"})
+		//return ctx.JSON(fiber.Map{"error": "Invalid token!"})
 	}
 
-	return ctx.JSON(fiber.Map{"message": "success"})
+	successMessage, _ := json.Marshal(map[string]string{"message": "success"})
+	return ctx.Status(200).Send(successMessage)
 }
 
 func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
