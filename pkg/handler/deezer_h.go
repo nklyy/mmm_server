@@ -105,7 +105,8 @@ func (h *Handler) moveToDeezer(c *websocket.Conn) {
 
 	fmt.Println(c.Locals("Host")) // "Localhost:3000"
 
-	mt, msg, err := c.ReadMessage()
+	fmt.Println("Remote Address", c.RemoteAddr())
+	_, msg, err := c.ReadMessage()
 	if err != nil {
 		log.Println("read:", err)
 		return
@@ -117,7 +118,7 @@ func (h *Handler) moveToDeezer(c *websocket.Conn) {
 		return
 	}
 
-	fmt.Println("Message", message.GuestID)
+	//fmt.Println("Message", message.GuestID)
 	// Get Guest User Music
 	info, err := h.services.GetUser(message.GuestID)
 	if err != nil {
@@ -126,7 +127,7 @@ func (h *Handler) moveToDeezer(c *websocket.Conn) {
 
 	//err = c.WriteMessage(mt, []byte(strconv.Itoa(len(info.Music))))
 
-	h.services.MoveToDeezer(info.AccessTokenMove, info.Music, c, mt)
+	h.services.MoveToDeezer(info.AccessTokenMove, info.Music, c, websocket.TextMessage)
 }
 
 //func (h *Handler) mv(c *websocket.Conn) {
