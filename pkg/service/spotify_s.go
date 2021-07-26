@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gofiber/websocket/v2"
 	"io/ioutil"
 	"log"
 	"mmm_server/pkg/model"
@@ -141,7 +142,7 @@ func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMus
 	return generalMS
 }
 
-func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) []string {
+func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string {
 	var found []string
 	var notFound []string
 	var moveArr [][]string
@@ -175,6 +176,12 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 	if len(found) > 0 {
 		client := &http.Client{}
 
+		countMusic, _ := json.Marshal(map[string]int{"lenTracks": len(found)})
+		err := con.WriteMessage(mt, countMusic)
+		if err != nil {
+			return nil
+		}
+
 		// Make chunk array
 		for i := 0; i < len(found); i += 50 {
 			end := i + 50
@@ -187,11 +194,19 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 		}
 
 		// Move tracks
-		c := 0
 		for _, ids := range moveArr {
+			c := 0
 			c += len(ids)
 
+			countMusic, _ := json.Marshal(map[string]int{"countM": c})
+
 			time.Sleep(2 * time.Second)
+
+			err := con.WriteMessage(mt, countMusic)
+			if err != nil {
+				return nil
+			}
+
 			req, err := http.NewRequest("PUT", "https://api.spotify.com/v1/me/tracks?ids="+string(strings.Join(ids, ",")), nil)
 			if err != nil {
 				log.Fatalf("ERROR %v", err)
@@ -211,6 +226,7 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 
 			resp.Body.Close()
 		}
+		con.Close()
 	}
 
 	return notFound

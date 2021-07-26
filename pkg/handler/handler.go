@@ -31,7 +31,7 @@ func (h *Handler) InitialRoute(route fiber.Router) {
 		v1.Get("/spotify/callback", h.spotifyCallback)
 		v1.Post("/spotify/checkT", h.checkSpotifyAccessToken)
 		v1.Post("/spotify/userMusic", h.spotifyUserMusic)
-		v1.Post("/spotify/moveToSpotify", h.moveToSpotify)
+		v1.Get("/ws/spotify/move", websocket.New(h.moveToSpotify))
 
 		// User
 		v1.Get("/userMusic", h.getUserMusic)

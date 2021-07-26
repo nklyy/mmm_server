@@ -33,6 +33,14 @@ func Execute() {
 		return c.Status(403).SendString("Request origin not allowed")
 	})
 
+	app.Use("/v1/ws/spotify/move", func(c *fiber.Ctx) error {
+		if c.Get("host") == "localhost:4000" {
+			c.Locals("Host", "Localhost:4000")
+			return c.Next()
+		}
+		return c.Status(403).SendString("Request origin not allowed")
+	})
+
 	// Init repository, service and handlers
 	newRepository := repository.NewRepository(db)
 	newService := service.NewService(newRepository)

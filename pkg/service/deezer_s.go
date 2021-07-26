@@ -184,11 +184,8 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 			return nil
 		}
 
-		c := 0
 		for _, id := range found {
-			c += 1
-
-			countMusic, _ := json.Marshal(map[string]int{"countM": c})
+			countMusic, _ := json.Marshal(map[string]int{"countM": 1})
 
 			time.Sleep(500 * time.Millisecond)
 
@@ -204,7 +201,6 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 			}
 
 			fmt.Println(resp.StatusCode)
-			fmt.Println(c)
 
 			resp.Body.Close()
 		}

@@ -23,7 +23,7 @@ type Spotify interface {
 	GetSpotifyAccessToken(code string) string
 	GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckSpotifyAccessToken(guestID string) bool
-	MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct) []string
+	MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string
 }
 
 type Service struct {

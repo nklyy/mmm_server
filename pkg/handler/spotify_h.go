@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
+	"log"
 	"net/url"
 	"strings"
 )
@@ -76,21 +80,34 @@ func (h *Handler) spotifyUserMusic(ctx *fiber.Ctx) error {
 	return ctx.JSON(uMusic)
 }
 
-func (h *Handler) moveToSpotify(ctx *fiber.Ctx) error {
-	var tkn struct {
+func (h *Handler) moveToSpotify(c *websocket.Conn) {
+	var message struct {
 		GuestID string `json:"gi"`
 	}
 
-	if err := ctx.BodyParser(&tkn); err != nil {
-		return err
-	}
+	fmt.Println(c.Locals("Host")) // "Localhost:3000"
 
-	// Get Guest User Music
-	info, err := h.services.GetUser(tkn.GuestID)
+	fmt.Println("Remote Address", c.RemoteAddr())
+	_, msg, err := c.ReadMessage()
 	if err != nil {
-		return err
+		log.Println("read:", err)
+		return
 	}
-	notFoundM := h.services.MoveToSpotify(info.AccessTokenMove, info.Music)
 
-	return ctx.JSON(notFoundM)
+	err = json.Unmarshal(msg, &message)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	//fmt.Println("Message", message.GuestID)
+	// Get Guest User Music
+	info, err := h.services.GetUser(message.GuestID)
+	if err != nil {
+		return
+	}
+
+	//err = c.WriteMessage(mt, []byte(strconv.Itoa(len(info.Music))))
+
+	h.services.MoveToSpotify(info.AccessTokenMove, info.Music, c, websocket.TextMessage)
 }
