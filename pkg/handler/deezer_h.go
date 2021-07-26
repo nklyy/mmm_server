@@ -68,7 +68,8 @@ func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
 	}
 
 	if err := ctx.BodyParser(&tkn); err != nil {
-		return err
+		errorMessage, _ := json.Marshal(map[string]string{"error": "Invalid body!"})
+		return ctx.Status(400).Send(errorMessage)
 	}
 
 	user, _ := h.services.GetUser(tkn.GuestID)
@@ -80,26 +81,6 @@ func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(uMusic)
 }
-
-//func (h *Handler) moveToDeezer(ctx *fiber.Ctx) error {
-//	var tkn struct {
-//		GuestID string `json:"gi"`
-//	}
-//
-//	if err := ctx.BodyParser(&tkn); err != nil {
-//		return err
-//	}
-//
-//	//Get Guest User Music
-//	info, err := h.services.GetUser(tkn.GuestID)
-//	if err != nil {
-//		return err
-//	}
-//
-//	notFoundM := h.services.MoveToDeezer(info.AccessTokenMove, info.Music)
-//
-//	return ctx.JSON(notFoundM)
-//}
 
 func (h *Handler) moveToDeezer(c *websocket.Conn) {
 	var message struct {
@@ -132,53 +113,3 @@ func (h *Handler) moveToDeezer(c *websocket.Conn) {
 
 	h.services.MoveToDeezer(info.AccessTokenMove, info.Music, c, websocket.TextMessage)
 }
-
-//func (h *Handler) mv(c *websocket.Conn) {
-//	var message struct {
-//		GuestID string `json:"gi"`
-//	}
-//
-//	fmt.Println(c.Locals("Host")) // "Localhost:3000"
-//
-//	mt, msg, err := c.ReadMessage()
-//	if err != nil {
-//		log.Println("read:", err)
-//		return
-//	}
-//
-//	err = json.Unmarshal(msg, &message)
-//	if err != nil {
-//		fmt.Println(err)
-//		return
-//	}
-//
-//	fmt.Println("Message", message.GuestID)
-//	// Get Guest User Music
-//	info, err := h.services.GetUser(message.GuestID)
-//	if err != nil {
-//		return
-//	}
-//
-//	//err = c.WriteMessage(mt, []byte(strconv.Itoa(len(info.Music))))
-//	countMusic, _ := json.Marshal(map[string]int{"allTracks": len(info.Music)})
-//	err = c.WriteMessage(mt, countMusic)
-//	if err != nil {
-//		return
-//	}
-//
-//	h.services.MoveToDeezer(info.AccessTokenMove, info.Music, c, mt)
-//	//return ctx.JSON(notFoundM)
-//
-//	//cou(c, mt)
-//}
-//
-//func cou(con *websocket.Conn, mt int) {
-//	for i := 0; i < 5; i++ {
-//		countM, _ := json.Marshal(map[string]int{"countM": i})
-//		time.Sleep(3 * time.Second)
-//		err := con.WriteMessage(mt, countM)
-//		if err != nil {
-//			return
-//		}
-//	}
-//}

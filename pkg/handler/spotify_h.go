@@ -54,11 +54,14 @@ func (h *Handler) checkSpotifyAccessToken(ctx *fiber.Ctx) error {
 
 	ok := h.services.CheckSpotifyAccessToken(cd.GuestID)
 	if !ok {
+		errorMessage, _ := json.Marshal(map[string]string{"error": "Invalid token!"})
+		return ctx.Status(400).Send(errorMessage)
 		//return fiber.NewError(fiber.StatusBadRequest, "Invalid token!")
-		return ctx.JSON(fiber.Map{"error": "Invalid token!"})
+		//return ctx.JSON(fiber.Map{"error": "Invalid token!"})
 	}
 
-	return ctx.JSON(fiber.Map{"message": "success"})
+	successMessage, _ := json.Marshal(map[string]string{"message": "success"})
+	return ctx.Status(200).Send(successMessage)
 }
 
 func (h *Handler) spotifyUserMusic(ctx *fiber.Ctx) error {
@@ -67,7 +70,8 @@ func (h *Handler) spotifyUserMusic(ctx *fiber.Ctx) error {
 	}
 
 	if err := ctx.BodyParser(&tkn); err != nil {
-		return err
+		errorMessage, _ := json.Marshal(map[string]string{"error": "Invalid token!"})
+		return ctx.Status(400).Send(errorMessage)
 	}
 
 	user, _ := h.services.GetUser(tkn.GuestID)

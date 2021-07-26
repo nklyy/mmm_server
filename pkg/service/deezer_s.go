@@ -127,7 +127,7 @@ func (ds *DeezerService) GetDeezerUserMusic(guestID string) []model.GeneralMusic
 	return generalMS
 }
 
-func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string {
+func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) {
 	var found []int
 	var notFound []string
 
@@ -181,7 +181,7 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 		countMusic, _ := json.Marshal(map[string]int{"lenTracks": len(found)})
 		err := con.WriteMessage(mt, countMusic)
 		if err != nil {
-			return nil
+			return
 		}
 
 		for _, id := range found {
@@ -191,7 +191,7 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 			err := con.WriteMessage(mt, countMusic)
 			if err != nil {
-				return nil
+				return
 			}
 
 			resp, err := http.Post("https://api.deezer.com/user/me/tracks?access_token="+accessToken+"&track_id="+strconv.Itoa(id), "application/x-www-form-urlencoded", nil)
@@ -204,11 +204,15 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 			resp.Body.Close()
 		}
-		con.Close()
 	}
 
-	fmt.Println("NOTFOUND", notFound, len(notFound))
-	return notFound
+	notFoundMusic, _ := json.Marshal(map[string][]string{"notFoundTracks": notFound})
+	err := con.WriteMessage(mt, notFoundMusic)
+	if err != nil {
+		return
+	}
+
+	con.Close()
 }
 
 // Function helper
@@ -223,7 +227,7 @@ func getDZUrl(url string, result interface{}) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -237,7 +241,7 @@ func getDZUrl(url string, result interface{}) error {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	err = json.Unmarshal(body, result)

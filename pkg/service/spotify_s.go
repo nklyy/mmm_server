@@ -142,7 +142,7 @@ func (ss *SpotifyService) GetSpotifyUserMusic(guestID string) []model.GeneralMus
 	return generalMS
 }
 
-func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string {
+func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) {
 	var found []string
 	var notFound []string
 	var moveArr [][]string
@@ -179,7 +179,7 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 		countMusic, _ := json.Marshal(map[string]int{"lenTracks": len(found)})
 		err := con.WriteMessage(mt, countMusic)
 		if err != nil {
-			return nil
+			return
 		}
 
 		// Make chunk array
@@ -204,7 +204,7 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 
 			err := con.WriteMessage(mt, countMusic)
 			if err != nil {
-				return nil
+				return
 			}
 
 			req, err := http.NewRequest("PUT", "https://api.spotify.com/v1/me/tracks?ids="+string(strings.Join(ids, ",")), nil)
@@ -226,10 +226,15 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 
 			resp.Body.Close()
 		}
-		con.Close()
 	}
 
-	return notFound
+	notFoundMusic, _ := json.Marshal(map[string][]string{"notFoundTracks": notFound})
+	err := con.WriteMessage(mt, notFoundMusic)
+	if err != nil {
+		return
+	}
+
+	con.Close()
 }
 
 // Functions - Helpers
@@ -245,7 +250,7 @@ func getSPUrl(url string, result interface{}, token string) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -259,12 +264,11 @@ func getSPUrl(url string, result interface{}, token string) error {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	err = json.Unmarshal(body, result)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 

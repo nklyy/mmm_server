@@ -16,14 +16,14 @@ type Deezer interface {
 	GetDeezerAccessToken(code string) string
 	GetDeezerUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckDeezerAccessToken(guestID string) bool
-	MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string
+	MoveToDeezer(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int)
 }
 
 type Spotify interface {
 	GetSpotifyAccessToken(code string) string
 	GetSpotifyUserMusic(guestID string) []model.GeneralMusicStruct
 	CheckSpotifyAccessToken(guestID string) bool
-	MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int) []string
+	MoveToSpotify(accessToken string, tracks []model.GeneralMusicStruct, con *websocket.Conn, mt int)
 }
 
 type Service struct {
