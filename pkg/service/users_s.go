@@ -24,16 +24,20 @@ func (us *UserService) GetUser(guestID string) (model.User, error) {
 	return user, nil
 }
 
-func (us *UserService) CreateGuestUser(guestID string, findAccessT string) {
-	_, err := us.repo.CreateGuestUserDB(guestID, findAccessT)
+func (us *UserService) CreateGuestUser(guestID string, findAccessT string) error {
+	err := us.repo.CreateGuestUserDB(guestID, findAccessT)
 	if err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
 
-func (us *UserService) UpdateGuestUser(guestID string, user model.User) {
-	_, err := us.repo.UpdateGuestUserDB(guestID, user)
+func (us *UserService) UpdateGuestUser(guestID string, user model.User) error {
+	err := us.repo.UpdateGuestUserDB(guestID, user)
 	if err != nil {
-		return
+		return err
 	}
+
+	return nil
 }

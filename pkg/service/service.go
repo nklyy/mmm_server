@@ -8,8 +8,8 @@ import (
 
 type User interface {
 	GetUser(guestID string) (model.User, error)
-	CreateGuestUser(guestID string, findAccessToken string)
-	UpdateGuestUser(guestID string, user model.User)
+	CreateGuestUser(guestID string, findAccessToken string) error
+	UpdateGuestUser(guestID string, user model.User) error
 }
 
 type Deezer interface {

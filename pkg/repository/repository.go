@@ -7,8 +7,8 @@ import (
 
 type User interface {
 	GetGuestUserDB(guestID string) (model.User, error)
-	CreateGuestUserDB(guestID string, findAccessToken string) (bool, error)
-	UpdateGuestUserDB(guestID string, user model.User) (bool, error)
+	CreateGuestUserDB(guestID string, findAccessToken string) error
+	UpdateGuestUserDB(guestID string, user model.User) error
 }
 
 type Repository struct {

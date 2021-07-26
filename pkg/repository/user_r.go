@@ -30,7 +30,7 @@ func (ur *UserMongoDb) GetGuestUserDB(guestID string) (model.User, error) {
 	return user, nil
 }
 
-func (ur *UserMongoDb) CreateGuestUserDB(guestID string, findAccessT string) (bool, error) {
+func (ur *UserMongoDb) CreateGuestUserDB(guestID string, findAccessT string) error {
 	var user model.User
 	user.ID = primitive.NewObjectID()
 	user.CreatedAt = time.Now()
@@ -46,22 +46,22 @@ func (ur *UserMongoDb) CreateGuestUserDB(guestID string, findAccessT string) (bo
 
 	_, err := ur.db.Collection("user").Indexes().CreateOne(context.TODO(), mod)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	_, err = ur.db.Collection("user").InsertOne(context.TODO(), user)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
-func (ur *UserMongoDb) UpdateGuestUserDB(guestID string, user model.User) (bool, error) {
+func (ur *UserMongoDb) UpdateGuestUserDB(guestID string, user model.User) error {
 	_, err := ur.db.Collection("user").UpdateOne(context.TODO(), bson.M{"guest_id": guestID}, bson.D{{"$set", user}})
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }

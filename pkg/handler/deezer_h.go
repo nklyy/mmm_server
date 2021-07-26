@@ -26,7 +26,11 @@ func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 	if splitState[0] == string('f') {
 		findAccessToken := h.services.GetDeezerAccessToken(code)
 
-		h.services.CreateGuestUser(splitState[1], findAccessToken)
+		err := h.services.CreateGuestUser(splitState[1], findAccessToken)
+		if err != nil {
+			errorMessage, _ := json.Marshal(map[string]string{"error": "Something wrong!"})
+			return ctx.Status(400).Send(errorMessage)
+		}
 	}
 
 	if splitState[0] == string('t') {
@@ -35,7 +39,11 @@ func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 		user, _ := h.services.GetUser(splitState[1])
 		user.AccessTokenMove = accessToken
 
-		h.services.UpdateGuestUser(splitState[1], user)
+		err := h.services.UpdateGuestUser(splitState[1], user)
+		if err != nil {
+			errorMessage, _ := json.Marshal(map[string]string{"error": "Something wrong!"})
+			return ctx.Status(400).Send(errorMessage)
+		}
 	}
 
 	return ctx.Redirect("http://localhost:3000/cf?type=d&&m=" + splitState[0] + "&gi=" + splitState[1])
@@ -77,7 +85,11 @@ func (h *Handler) deezerUserMusic(ctx *fiber.Ctx) error {
 
 	// Update Guest User Music
 	user.Music = uMusic
-	h.services.UpdateGuestUser(tkn.GuestID, user)
+	err := h.services.UpdateGuestUser(tkn.GuestID, user)
+	if err != nil {
+		errorMessage, _ := json.Marshal(map[string]string{"error": "Something wrong!"})
+		return ctx.Status(400).Send(errorMessage)
+	}
 
 	return ctx.JSON(uMusic)
 }
