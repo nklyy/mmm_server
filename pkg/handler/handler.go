@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gofiber/websocket/v2"
+	"mmm_server/config"
 	"mmm_server/pkg/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,10 +10,14 @@ import (
 
 type Handler struct {
 	services *service.Service
+	cfg      *config.Configurations
 }
 
-func NewHandler(services *service.Service) *Handler {
-	return &Handler{services: services}
+func NewHandler(services *service.Service, cfg *config.Configurations) *Handler {
+	return &Handler{
+		services: services,
+		cfg:      cfg,
+	}
 }
 
 func (h *Handler) InitialRoute(route fiber.Router) {

@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"io/ioutil"
 	"log"
+	"mmm_server/config"
 	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
@@ -18,11 +19,13 @@ import (
 
 type DeezerService struct {
 	repo repository.User
+	cfg  *config.Configurations
 }
 
-func NewDeezerService(repo repository.User) *DeezerService {
+func NewDeezerService(repo repository.User, cfg *config.Configurations) *DeezerService {
 	return &DeezerService{
 		repo: repo,
+		cfg:  cfg,
 	}
 }
 
@@ -63,7 +66,7 @@ func (ds *DeezerService) GetDeezerAccessToken(code string) string {
 	responseBody := bytes.NewBuffer(postBody)
 
 	// Make POST request
-	respAccess, err := http.Post("https://connect.deezer.com/oauth/access_token.php?app_id=491682&secret=3288c76621f0c3a4fa83f3d1cdc1a55f&code="+code+"&output=json", "application/json", responseBody)
+	respAccess, err := http.Post("https://connect.deezer.com/oauth/access_token.php?app_id="+ds.cfg.DeezerClientKey+"&secret="+ds.cfg.DeezerSecretKey+"&code="+code+"&output=json", "application/json", responseBody)
 	if err != nil {
 		log.Fatalf("ERROR %v", err)
 	}
@@ -199,8 +202,6 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			fmt.Println(resp.StatusCode)
 
 			resp.Body.Close()
 		}

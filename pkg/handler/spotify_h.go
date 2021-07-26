@@ -13,10 +13,10 @@ import (
 func (h *Handler) spotifyAuthRedirect(ctx *fiber.Ctx) error {
 	m := ctx.Query("m")
 	guestID := ctx.Query("gi")
-	scope := url.PathEscape("user-read-private user-read-email user-read-playback-state user-modify-playback-state user-library-modify user-library-read")
-	r := url.PathEscape("http://localhost:4000/v1/spotify/callback")
+	scope := url.PathEscape(h.cfg.SpotifyScope)
+	r := url.PathEscape(h.cfg.SpotifyRedirectUrl)
 
-	return ctx.Redirect("https://accounts.spotify.com/authorize?response_type=code&client_id=6b990a58d275455da234d248fda89722&scope=" + scope + "&redirect_uri=" + r + "&show_dialog=true&state=" + m + "," + guestID)
+	return ctx.Redirect("https://accounts.spotify.com/authorize?response_type=code&client_id=" + h.cfg.SpotifyClientKey + "&scope=" + scope + "&redirect_uri=" + r + "&show_dialog=true&state=" + m + "," + guestID)
 }
 
 func (h *Handler) spotifyCallback(ctx *fiber.Ctx) error {
@@ -48,7 +48,7 @@ func (h *Handler) spotifyCallback(ctx *fiber.Ctx) error {
 		}
 	}
 
-	return ctx.Redirect("http://localhost:3000/cf?type=s&m=" + splitState[0] + "&gi=" + splitState[1])
+	return ctx.Redirect(h.cfg.FrontEndUrl + "/cf?type=s&m=" + splitState[0] + "&gi=" + splitState[1])
 }
 
 func (h *Handler) checkSpotifyAccessToken(ctx *fiber.Ctx) error {

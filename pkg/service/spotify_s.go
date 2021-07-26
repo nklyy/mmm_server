@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"io/ioutil"
 	"log"
+	"mmm_server/config"
 	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 	"net/http"
@@ -16,11 +17,13 @@ import (
 
 type SpotifyService struct {
 	repo repository.User
+	cfg  *config.Configurations
 }
 
-func NewSpotifyService(repo repository.User) *SpotifyService {
+func NewSpotifyService(repo repository.User, cfg *config.Configurations) *SpotifyService {
 	return &SpotifyService{
 		repo: repo,
+		cfg:  cfg,
 	}
 }
 
@@ -39,7 +42,6 @@ type SpotifyUserInfo struct {
 }
 
 type SpotifyTrack struct {
-	//AddedAt string `json:"added_at"`
 	Track struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
@@ -66,7 +68,7 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	urlD := url.Values{}
 	urlD.Add("grant_type", "authorization_code")
 	urlD.Add("code", code)
-	urlD.Add("redirect_uri", "http://localhost:4000/v1/spotify/callback")
+	urlD.Add("redirect_uri", ss.cfg.SpotifyRedirectUrl)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(urlD.Encode()))
@@ -75,7 +77,7 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
-	req.SetBasicAuth("6b990a58d275455da234d248fda89722", "bfa229942d1a444f9ab9e91266a42d73")
+	req.SetBasicAuth(ss.cfg.SpotifyClientKey, ss.cfg.SpotifySecretKey)
 
 	respAccess, err := client.Do(req)
 
@@ -220,9 +222,6 @@ func (ss *SpotifyService) MoveToSpotify(accessToken string, tracks []model.Gener
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			fmt.Println(resp.StatusCode)
-			fmt.Println(c)
 
 			resp.Body.Close()
 		}

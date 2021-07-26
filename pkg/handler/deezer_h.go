@@ -13,7 +13,7 @@ func (h *Handler) deezerAuthRedirect(ctx *fiber.Ctx) error {
 	m := ctx.Query("m")
 	guestID := ctx.Query("gi")
 	return ctx.Redirect(
-		"https://connect.deezer.com/oauth/auth.php?app_id=491682&redirect_uri=http://localhost:4000/v1/deezer/callback&perms=basic_access,manage_library&state="+m+","+guestID,
+		"https://connect.deezer.com/oauth/auth.php?app_id=491682&redirect_uri="+h.cfg.DeezerRedirectUrl+"&perms="+h.cfg.DeezerScope+"&state="+m+","+guestID,
 		302)
 }
 
@@ -46,7 +46,7 @@ func (h *Handler) deezerCallback(ctx *fiber.Ctx) error {
 		}
 	}
 
-	return ctx.Redirect("http://localhost:3000/cf?type=d&&m=" + splitState[0] + "&gi=" + splitState[1])
+	return ctx.Redirect(h.cfg.FrontEndUrl + "/cf?type=d&&m=" + splitState[0] + "&gi=" + splitState[1])
 }
 
 func (h *Handler) checkDeezerAccessToken(ctx *fiber.Ctx) error {

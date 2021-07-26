@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/gofiber/websocket/v2"
+	"mmm_server/config"
 	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 )
@@ -32,10 +33,10 @@ type Service struct {
 	Spotify
 }
 
-func NewService(repos *repository.Repository) *Service {
+func NewService(repos *repository.Repository, cfg *config.Configurations) *Service {
 	return &Service{
-		User:    NewUserService(repos.User),
-		Deezer:  NewDeezerService(repos.User),
-		Spotify: NewSpotifyService(repos.User),
+		User:    NewUserService(repos.User, cfg),
+		Deezer:  NewDeezerService(repos.User, cfg),
+		Spotify: NewSpotifyService(repos.User, cfg),
 	}
 }

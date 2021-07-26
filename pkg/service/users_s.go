@@ -1,17 +1,20 @@
 package service
 
 import (
+	"mmm_server/config"
 	"mmm_server/pkg/model"
 	"mmm_server/pkg/repository"
 )
 
 type UserService struct {
 	repo repository.User
+	cfg  *config.Configurations
 }
 
-func NewUserService(repo repository.User) *UserService {
+func NewUserService(repo repository.User, cfg *config.Configurations) *UserService {
 	return &UserService{
 		repo: repo,
+		cfg:  cfg,
 	}
 }
 

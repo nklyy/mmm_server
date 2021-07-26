@@ -41,7 +41,7 @@ func (ur *UserMongoDb) CreateGuestUserDB(guestID string, findAccessT string) err
 
 	mod := mongo.IndexModel{
 		Keys:    bson.M{"created_at": 1}, // index in ascending order or -1 for descending order
-		Options: options.Index().SetExpireAfterSeconds(60),
+		Options: options.Index().SetExpireAfterSeconds(500),
 	}
 
 	_, err := ur.db.Collection("user").Indexes().CreateOne(context.TODO(), mod)
