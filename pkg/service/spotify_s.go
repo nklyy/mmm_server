@@ -63,7 +63,7 @@ type ResultSpSearch struct {
 	} `json:"tracks"`
 }
 
-func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
+func (ss *SpotifyService) GetSpotifyAccessToken(code string) (string, error) {
 	// Create url search
 	urlD := url.Values{}
 	urlD.Add("grant_type", "authorization_code")
@@ -73,7 +73,7 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(urlD.Encode()))
 	if err != nil {
-		log.Fatalf("ERROR %v", err)
+		return "", err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
@@ -82,7 +82,7 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	respAccess, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("ERROR %v", err)
+		return "", err
 	}
 
 	defer respAccess.Body.Close()
@@ -90,14 +90,17 @@ func (ss *SpotifyService) GetSpotifyAccessToken(code string) string {
 	// Read access body
 	body, err := ioutil.ReadAll(respAccess.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	// Unmarshal access token
 	var spAccess SpotifyAccessToken
 	err = json.Unmarshal(body, &spAccess)
+	if err != nil {
+		return "", err
+	}
 
-	return spAccess.AccessToken
+	return spAccess.AccessToken, nil
 }
 
 func (ss *SpotifyService) CheckSpotifyAccessToken(guestID string) bool {

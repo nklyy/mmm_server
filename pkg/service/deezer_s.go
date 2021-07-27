@@ -59,7 +59,7 @@ type ResultDzSearch struct {
 	} `json:"data"`
 }
 
-func (ds *DeezerService) GetDeezerAccessToken(code string) string {
+func (ds *DeezerService) GetDeezerAccessToken(code string) (string, error) {
 	postBody, _ := json.Marshal(map[string]string{
 		"code": code,
 	})
@@ -68,7 +68,7 @@ func (ds *DeezerService) GetDeezerAccessToken(code string) string {
 	// Make POST request
 	respAccess, err := http.Post("https://connect.deezer.com/oauth/access_token.php?app_id="+ds.cfg.DeezerClientKey+"&secret="+ds.cfg.DeezerSecretKey+"&code="+code+"&output=json", "application/json", responseBody)
 	if err != nil {
-		log.Fatalf("ERROR %v", err)
+		return "", err
 	}
 
 	defer respAccess.Body.Close()
@@ -76,14 +76,17 @@ func (ds *DeezerService) GetDeezerAccessToken(code string) string {
 	// Read access body
 	body, err := ioutil.ReadAll(respAccess.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	// Unmarshal access token
 	var dzAccess DeezerAccessToken
 	err = json.Unmarshal(body, &dzAccess)
+	if err != nil {
+		return "", err
+	}
 
-	return dzAccess.AccessToken
+	return dzAccess.AccessToken, nil
 }
 
 func (ds *DeezerService) CheckDeezerAccessToken(guestID string) bool {
@@ -149,17 +152,17 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 		// Deep music search
 		if len(result.Data) == 0 {
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 			searchUrl = "https://api.deezer.com/search?order=RANKING&q=artist:" + "\"" + artistName + "\"" + "track:" + "\"" + url.PathEscape(track.SongName) + "\"" + "&limit=1"
 			getDZUrl(searchUrl, &result)
 
 			if len(result.Data) == 0 {
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 				searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=" + url.PathEscape(searchString) + "&limit=1"
 				getDZUrl(searchUrl, &result)
 
 				if len(result.Data) == 0 {
-					time.Sleep(500 * time.Millisecond)
+					time.Sleep(300 * time.Millisecond)
 					searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
 					getDZUrl(searchUrl, &result)
 
@@ -190,7 +193,7 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 		for _, id := range found {
 			countMusic, _ := json.Marshal(map[string]int{"countM": 1})
 
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 
 			err := con.WriteMessage(mt, countMusic)
 			if err != nil {

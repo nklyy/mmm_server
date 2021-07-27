@@ -26,9 +26,13 @@ func (h *Handler) spotifyCallback(ctx *fiber.Ctx) error {
 
 	// Create Guest User
 	if splitState[0] == string('f') {
-		findAccessToken := h.services.GetSpotifyAccessToken(code)
+		findAccessToken, err := h.services.GetSpotifyAccessToken(code)
+		if err != nil {
+			errorMessage, _ := json.Marshal(map[string]string{"error": "Wrong code!"})
+			return ctx.Status(400).Send(errorMessage)
+		}
 
-		err := h.services.CreateGuestUser(splitState[1], findAccessToken)
+		err = h.services.CreateGuestUser(splitState[1], findAccessToken)
 		if err != nil {
 			errorMessage, _ := json.Marshal(map[string]string{"error": "Something wrong!"})
 			return ctx.Status(400).Send(errorMessage)
@@ -36,12 +40,16 @@ func (h *Handler) spotifyCallback(ctx *fiber.Ctx) error {
 	}
 
 	if splitState[0] == string('t') {
-		accessToken := h.services.GetSpotifyAccessToken(code)
+		moveAccessToken, err := h.services.GetSpotifyAccessToken(code)
+		if err != nil {
+			errorMessage, _ := json.Marshal(map[string]string{"error": "Wrong code!"})
+			return ctx.Status(400).Send(errorMessage)
+		}
 
 		user, _ := h.services.GetUser(splitState[1])
-		user.AccessTokenMove = accessToken
+		user.AccessTokenMove = moveAccessToken
 
-		err := h.services.UpdateGuestUser(splitState[1], user)
+		err = h.services.UpdateGuestUser(splitState[1], user)
 		if err != nil {
 			errorMessage, _ := json.Marshal(map[string]string{"error": "Something wrong!"})
 			return ctx.Status(400).Send(errorMessage)
@@ -101,9 +109,7 @@ func (h *Handler) moveToSpotify(c *websocket.Conn) {
 		GuestID string `json:"gi"`
 	}
 
-	fmt.Println(c.Locals("Host")) // "Localhost:3000"
-
-	fmt.Println("Remote Address", c.RemoteAddr())
+	fmt.Println("Remote Address Connected", c.RemoteAddr())
 	_, msg, err := c.ReadMessage()
 	if err != nil {
 		log.Println("read:", err)
