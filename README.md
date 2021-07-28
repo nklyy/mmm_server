@@ -23,6 +23,13 @@ DEEZER_R_U=deezer callback url
 DEEZER_C_K=deezer client id
 DEEZER_S_K=deezer secret key
 DEEZER_SCOPE=deezer permissions
+
+MONGO_DB_USER=
+MONGO_DB_PASS=
+MONGO_DB_NAME=
+
+# Or you can set full url
+MONGO_DB_URL=
 ```
 
 

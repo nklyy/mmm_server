@@ -14,4 +14,9 @@ type Configurations struct {
 	DeezerClientKey   string `mapstructure:"DEEZER_C_K"`
 	DeezerSecretKey   string `mapstructure:"DEEZER_S_K"`
 	DeezerScope       string `mapstructure:"DEEZER_SCOPE"`
+
+	MongoDbUser string `mapstructure:"MONGO_DB_USER"`
+	MongoDbPass string `mapstructure:"MONGO_DB_PASS"`
+	MongoDbName string `mapstructure:"MONGO_DB_NAME"`
+	MongoDbUrl  string `mapstructure:"MONGO_DB_URL"`
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"mmm_server/config"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,8 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func MongoDbConnection() (*mongo.Database, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://admin:DNWCIEGKv32vUryK@cluster0.ppcb3.mongodb.net/MMM?retryWrites=true&w=majority"))
+func MongoDbConnection(cfg *config.Configurations) (*mongo.Database, error) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(cfg.MongoDbUrl))
 	if err != nil {
 		log.Fatal(err)
 	}

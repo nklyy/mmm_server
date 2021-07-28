@@ -21,7 +21,7 @@ func Execute() {
 	app := fiber.New()
 
 	// Connection to DB
-	db, err := repository.MongoDbConnection()
+	db, err := repository.MongoDbConnection(cfg)
 	if err != nil {
 		return
 	}
