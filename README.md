@@ -33,7 +33,7 @@ MONGO_DB_URL=
 ```
 
 
-From run app
+For run app
 ```go
 go run server
 ```
