@@ -13,7 +13,7 @@ func (h *Handler) deezerAuthRedirect(ctx *fiber.Ctx) error {
 	m := ctx.Query("m")
 	guestID := ctx.Query("gi")
 	return ctx.Redirect(
-		"https://connect.deezer.com/oauth/auth.php?app_id=491682&redirect_uri="+h.cfg.DeezerRedirectUrl+"&perms="+h.cfg.DeezerScope+"&state="+m+","+guestID,
+		"https://connect.deezer.com/oauth/auth.php?app_id="+h.cfg.DeezerClientKey+"&redirect_uri="+h.cfg.DeezerRedirectUrl+"&perms="+h.cfg.DeezerScope+"&state="+m+","+guestID,
 		302)
 }
 
