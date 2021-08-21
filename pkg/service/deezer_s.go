@@ -141,7 +141,7 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 	for _, track := range tracks {
 		reg := regexp.MustCompile(`(?i)\(.*|feat.*|- feat.*|- with.*`)
 
-		searchString := fmt.Sprintf("%s %s", track.ArtistName, reg.Split(track.SongName, -1)[0])
+		searchString := fmt.Sprintf("%s - %s", track.ArtistName, reg.Split(track.SongName, -1)[0])
 		artistName := url.PathEscape(track.ArtistName)
 		shortSongName := url.PathEscape(reg.Split(track.SongName, -1)[0])
 		shortAlbumName := url.PathEscape(reg.Split(track.AlbumName, -1)[0])
@@ -158,16 +158,16 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 
 			if len(result.Data) == 0 {
 				time.Sleep(300 * time.Millisecond)
-				searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=" + url.PathEscape(searchString) + "&limit=1"
+				searchUrl = "https://api.deezer.com/search?order=RANKING&q=" + url.PathEscape(searchString) + "&limit=1"
 				getDZUrl(searchUrl, &result)
 
 				if len(result.Data) == 0 {
 					time.Sleep(300 * time.Millisecond)
-					searchUrl = "https://api.deezer.com/search/track?order=RANKING&q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
+					searchUrl = "https://api.deezer.com/search?order=RANKING&q=track:" + "\"" + shortSongName + "\"" + "album:" + "\"" + url.PathEscape(track.AlbumName) + "\"" + "&limit=1"
 					getDZUrl(searchUrl, &result)
 
 					if len(result.Data) == 0 {
-						notFound = append(notFound, searchString, track.AlbumName)
+						notFound = append(notFound, searchString)
 					} else {
 						found = append(found, result.Data[0].ID)
 					}
@@ -210,13 +210,19 @@ func (ds *DeezerService) MoveToDeezer(accessToken string, tracks []model.General
 		}
 	}
 
-	notFoundMusic, _ := json.Marshal(map[string][]string{"notFoundTracks": notFound})
-	err := con.WriteMessage(mt, notFoundMusic)
-	if err != nil {
-		return
+	if len(notFound) > 0 {
+		notFoundMusic, _ := json.Marshal(map[string][]string{"notFoundTracks": notFound})
+		err := con.WriteMessage(mt, notFoundMusic)
+		if err != nil {
+			return
+		}
+	} else {
+		success, _ := json.Marshal(map[string]string{"success": "success"})
+		err := con.WriteMessage(mt, success)
+		if err != nil {
+			return
+		}
 	}
-
-	con.Close()
 }
 
 // Function helper
